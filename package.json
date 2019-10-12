@@ -2,21 +2,26 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "parcel src/index.html --open",
-    "build": "parcel build src/index.html",
+    "dev": "webpack-dev-server --mode development",
+    "build": "webpack --mode production",
     "typecheck": "tsc -p . --noEmit",
     "test": "jest",
     "deploy": "netlify deploy -d dist --prod"
   },
   "dependencies": {
-    "core-js": "3"
+    "core-js": "3",
+    "preact": "^10.0.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",
+    "html-webpack-plugin": "^3.2.0",
     "jest": "^24.9.0",
     "netlify-cli": "^2.17.0",
-    "parcel": "^2.0.0-alpha.1.1",
     "ts-jest": "^24.1.0",
-    "typescript": "^3.7.0-beta"
+    "ts-loader": "^6.2.0",
+    "typescript": "^3.7.0-beta",
+    "webpack": "^4.41.1",
+    "webpack-cli": "^3.3.9",
+    "webpack-dev-server": "^3.8.2"
   }
 }
