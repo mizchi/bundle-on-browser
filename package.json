@@ -9,8 +9,14 @@
     "deploy": "netlify deploy -d dist --prod"
   },
   "dependencies": {
+    "async": "^3.1.0",
     "core-js": "3",
-    "preact": "^10.0.0"
+    "graphlib": "^2.1.7",
+    "hosted-git-info": "^3.0.2",
+    "preact": "^10.0.0",
+    "semver": "^6.3.0",
+    "superagent": "^5.1.0",
+    "validate-npm-package-name": "^3.0.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",
