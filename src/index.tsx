@@ -1,13 +1,5 @@
 import { h, render } from "preact";
-import Resolver from "./local-resolver/resolver";
-import NpmHttpRegistry from "./local-resolver/npm-http";
-
-function resolve(dependencies: any) {
-  const resolver = new Resolver({
-    registry: new NpmHttpRegistry({ registryUrl: "https://registry.npmjs.cf/" })
-  });
-  return resolver.resolve(dependencies);
-}
+import resolve from "./local-resolver/resolver";
 
 resolve({
   rxjs: "~5.5.0",

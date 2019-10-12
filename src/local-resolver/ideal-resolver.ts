@@ -13,72 +13,21 @@ const packageJsonProps = [
   "unpkg"
 ];
 
-export default function resolve(dependencies: { [key: string]: string }) {
-  const resolver = new Resolver();
-  return new Promise((resolve, reject) => {
-    const depNames = Object.keys(dependencies);
-
-    if (depNames.length === 0) {
-      return resolve(resolver.jpack);
-    }
-
-    depNames.forEach(name =>
-      resolver.queue.push({
-        name,
-        version: dependencies[name],
-        parentNode: "root"
-      })
-    );
-
-    resolver.queue.drain(() => {
-      if (resolver.error) {
-        return reject(resolver.error);
-      }
-
-      if (resolver.validatePeers) {
-        resolver.validatePeerDependencies();
-      }
-
-      if (resolver.error) {
-        return reject(resolver.error);
-      } else {
-        resolver.renderJpack();
-
-        return resolve(resolver.jpack);
-      }
-    });
-
-    resolver.startTime = Date.now();
-    resolver.registry.batchFetch(depNames).then(resolver.queue.resume);
-  });
-}
-
-type Task = {
-  name: string;
-  version: string;
-  parentNode: string;
-};
-
-class Resolver {
+export default class Resolver {
   graph: any;
   invalidPeers: any;
   missingPeers: any;
   requestedPeers: any;
   jpack: any;
   error: any;
-  queue: any;
-  startTime: any;
-  timeout: any;
   concurrency: any;
   registry: any;
+  packageJsonProps: any;
   validatePeers: any;
 
   constructor() {
     this.validatePeers = true;
-    this.registry = new NpmHttpRegistry({
-      registryUrl: "https://registry.npmjs.cf/"
-    });
-
+    this.registry = new NpmHttpRegistry();
     this.concurrency = 4;
     this.graph = new Graph();
     this.invalidPeers = {};
@@ -90,48 +39,30 @@ class Resolver {
       warnings: {}
     };
     this.error = null;
-    this.queue = async.queue((task: any, done: Function) => {
-      if (Date.now() - this.startTime > this.timeout || this.error) {
-        if (!this.error) {
-          this.error = { error: "TIMEOUT" };
-        }
-        return done();
-      }
-      this.loadRegistryPackage(task, done);
-    }, this.concurrency);
-
-    this.queue.pause();
   }
 
-  loadRegistryPackage(task: Task, done: Function) {
+  async loadRegistryPackage(task: any) {
     const name = task.name;
-
-    // @ts-ignore
-    this.registry
-      .fetch(name)
-      .then((registryPackage: any) => {
-        this.resolveDependencies(task, registryPackage, done);
-      })
-      .catch(() => {
-        this.error = {
-          error: "PACKAGE_NOT_FOUND",
-          data: { name }
-        };
-        return done();
-      });
+    try {
+      const registryPackage = await this.registry.fetch(name);
+      await this.resolveDependencies(task, registryPackage);
+    } catch {
+      this.error = {
+        error: "PACKAGE_NOT_FOUND",
+        data: { name }
+      };
+    }
   }
 
   // Resolution & Iteration
-  resolveDependencies(task: Task, registryPackage: any, done: Function) {
-    const version = resolveVersion(task.version, registryPackage);
-    // @ts-ignore
-    if (!version || version.error) {
-      this.error = version;
-      return done();
+  async resolveDependencies(task: any, registryPackage: any) {
+    const version = this.resolveVersion(task.version, registryPackage);
+    if (!version) {
+      return Promise.reject("No version");
     }
 
     const fullName = `${registryPackage.name}@${version}`;
-    const versionPackageJson = registryPackage.versions[version as string];
+    const versionPackageJson = registryPackage.versions[version];
     const isRootDependency = task.parentNode === "root";
     const subDepsResolved = this.graph.hasNode(fullName);
 
@@ -144,7 +75,7 @@ class Resolver {
     }
 
     if (subDepsResolved) {
-      return done();
+      return;
     }
 
     const dependencies = Object.assign(
@@ -168,17 +99,61 @@ class Resolver {
     }
 
     const depNames = Object.keys(dependencies);
-
-    this.registry.batchFetch(depNames).then(() => {
-      depNames.forEach(name =>
-        this.queue.push({
+    await this.registry.batchFetch(depNames);
+    await Promise.all(
+      depNames.map(async name =>
+        this.loadRegistryPackage({
           name,
           version: dependencies[name],
           parentNode: fullName
         })
-      );
-      done();
-    });
+      )
+    );
+  }
+
+  resolveVersion(
+    requestedVersion: string,
+    registryPackage: { "dist-tags": any; versions: any; name: string }
+  ) {
+    if (
+      registryPackage["dist-tags"] &&
+      registryPackage["dist-tags"].hasOwnProperty(requestedVersion)
+    ) {
+      return registryPackage["dist-tags"][requestedVersion];
+    }
+
+    const availableVersions = Object.keys(registryPackage.versions || {});
+
+    if (requestedVersion === "") {
+      requestedVersion = "*";
+    }
+
+    let version = semver.maxSatisfying(
+      availableVersions,
+      requestedVersion,
+      true
+    );
+
+    if (
+      !version &&
+      requestedVersion === "*" &&
+      availableVersions.every(
+        // @ts-ignore
+        availableVersion => !!semver(availableVersion, true).prerelease.length
+      )
+    ) {
+      version =
+        registryPackage["dist-tags"] && registryPackage["dist-tags"].latest;
+    }
+
+    if (!version) {
+      this.error = {
+        error: "UNSATISFIED_RANGE",
+        data: { name: registryPackage.name, range: requestedVersion }
+      };
+    } else {
+      return version;
+    }
   }
 
   validatePeerDependencies() {
@@ -219,6 +194,7 @@ class Resolver {
     }
   }
 
+  // Jpack Rendering
   fillJpackDep(fullName: string, versionPkg: string | null, dep: any) {
     this.graph.successors(fullName).forEach((name: string) => {
       if (name.substr(1).indexOf("@") === -1) {
@@ -235,7 +211,7 @@ class Resolver {
     });
 
     if (versionPkg) {
-      packageJsonProps.forEach((prop: string) => {
+      this.packageJsonProps.forEach((prop: string) => {
         if (versionPkg.hasOwnProperty(prop)) {
           dep[prop] = versionPkg[prop as any];
         }
@@ -280,57 +256,22 @@ class Resolver {
       this.jpack.warnings.invalidPeers = this.invalidPeers;
     }
   }
-}
 
-function resolveVersion(
-  requestedVersion: string,
-  registryPackage: {
-    "dist-tags": { [key: string]: any };
-    versions: any;
-    name: string;
-  }
-):
-  | string
-  | {
-      error: "UNSATISFIED_RANGE";
-      data: {
-        name: string;
-        range: any;
-      };
-    } {
-  if (
-    registryPackage["dist-tags"] &&
-    registryPackage["dist-tags"].hasOwnProperty(requestedVersion)
-  ) {
-    return registryPackage["dist-tags"][requestedVersion];
-  }
+  async resolve(dependencies: any) {
+    const depNames = Object.keys(dependencies);
 
-  const availableVersions = Object.keys(registryPackage.versions || {});
-
-  if (requestedVersion === "") {
-    requestedVersion = "*";
-  }
-
-  let version = semver.maxSatisfying(availableVersions, requestedVersion, true);
-
-  if (
-    !version &&
-    requestedVersion === "*" &&
-    availableVersions.every(
-      // @ts-ignore
-      availableVersion => !!semver(availableVersion, true).prerelease.length
-    )
-  ) {
-    version =
-      registryPackage["dist-tags"] && registryPackage["dist-tags"].latest;
-  }
-
-  if (!version) {
-    return {
-      error: "UNSATISFIED_RANGE",
-      data: { name: registryPackage.name, range: requestedVersion }
-    };
-  } else {
-    return version;
+    await Promise.all(
+      depNames.map(async name => {
+        const res = await this.loadRegistryPackage({
+          name,
+          version: dependencies[name],
+          parentNode: "root"
+        });
+        // this.validatePeerDependencies();
+        this.renderJpack();
+        return res;
+      })
+    );
+    await this.registry.batchFetch(depNames);
   }
 }
