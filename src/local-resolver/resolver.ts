@@ -1,7 +1,8 @@
 import NpmHttpRegistry from "./npm-http";
-const async = require("async");
-const semver = require("semver");
-const { Graph } = require("graphlib");
+import async from "async";
+import semver from "semver";
+import { Graph } from "graphlib";
+
 const packageJsonProps = [
   "main",
   "browser",
@@ -168,6 +169,7 @@ export default class Resolver {
       !version &&
       requestedVersion === "*" &&
       availableVersions.every(
+        // @ts-ignore
         availableVersion => !!semver(availableVersion, true).prerelease.length
       )
     ) {

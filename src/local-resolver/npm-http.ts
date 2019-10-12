@@ -1,6 +1,7 @@
-const npa = require("./npa");
-const request = require("superagent");
-const async = require("async");
+import npa from "./npa";
+// @ts-ignore
+import request from "superagent";
+import async from "async";
 
 export default class NpmHttpRegistry {
   registryUrl: string;
@@ -48,6 +49,7 @@ export default class NpmHttpRegistry {
 
     if (fetchKeys.length) {
       this.fetching = this.fetching.concat(fetchKeys);
+      // @ts-ignore
       async.parallel(
         fetchKeys.map((key: string) => {
           const escapedName = key && npa(key).escapedName;

@@ -1,32 +1,23 @@
 // npm-package-arg
-module.exports = npa;
-module.exports.resolve = resolve;
-module.exports.Result = Result;
+import semver from "semver";
+import path from "path";
+import url from "url";
+import validatePackageName from "validate-npm-package-name";
+import HostedGit from "hosted-git-info";
 
-let url;
-let HostedGit;
-let semver;
-let path_;
-function path() {
-  if (!path_) path_ = require("path");
-  return path_;
-}
-let validatePackageName;
-// let osenv;
-
-const isWindows = process.platform === "win32" || global.FAKE_WINDOWS;
-const hasSlashes = isWindows ? /\\|[/]/ : /[/]/;
+const hasSlashes = /[/]/;
 const isURL = /^(?:git[+])?[a-z]+:/i;
 const isFilename = /[.](?:tgz|tar.gz|tar)$/i;
+const isFilespec = /^(?:[.]|~[/]|[/]|[a-zA-Z]:)/;
 
-function npa(arg, where) {
+export default function npa(arg: any, where?: any): any {
   let name;
   let spec;
   if (typeof arg === "object") {
     if (arg instanceof Result && (!where || where === arg.where)) {
       return arg;
     } else if (arg.name && arg.rawSpec) {
-      return npa.resolve(arg.name, arg.rawSpec, where || arg.where);
+      return resolve(arg.name, arg.rawSpec, where || arg.where);
     } else {
       return npa(arg.raw, where || arg.where);
     }
@@ -45,8 +36,6 @@ function npa(arg, where) {
     name = namePart;
     spec = arg.slice(nameEndsAt + 1);
   } else {
-    if (!validatePackageName)
-      validatePackageName = require("validate-npm-package-name");
     const valid = validatePackageName(arg);
     if (valid.validForOldPackages) {
       name = arg;
@@ -57,11 +46,7 @@ function npa(arg, where) {
   return resolve(name, spec, where, arg);
 }
 
-const isFilespec = isWindows
-  ? /^(?:[.]|~[/]|[/\\]|[a-zA-Z]:)/
-  : /^(?:[.]|~[/]|[/]|[a-zA-Z]:)/;
-
-function resolve(name, spec, where, arg) {
+function resolve(name: string, spec: any, where: any, arg?: any) {
   const res = new Result({
     raw: arg,
     name: name,
@@ -76,7 +61,6 @@ function resolve(name, spec, where, arg) {
   } else if (spec && /^npm:/i.test(spec)) {
     return fromAlias(res, where);
   }
-  if (!HostedGit) HostedGit = require("hosted-git-info");
   const hosted = HostedGit.fromUrl(spec, {
     noGitPlus: true,
     noCommittish: true
@@ -92,71 +76,101 @@ function resolve(name, spec, where, arg) {
   }
 }
 
-function invalidPackageName(name, valid) {
+function invalidPackageName(name: string, valid: validatePackageName.Result) {
   const err = new Error(
+    // @ts-ignore
     `Invalid package name "${name}": ${valid.errors.join("; ")}`
   );
+  // @ts-ignore
   err.code = "EINVALIDPACKAGENAME";
   return err;
 }
-function invalidTagName(name) {
+
+function invalidTagName(name: string) {
   const err = new Error(
     `Invalid tag name "${name}": Tags may not have any characters that encodeURIComponent encodes.`
   );
+  // @ts-ignore
   err.code = "EINVALIDTAGNAME";
   return err;
 }
 
-function Result(opts) {
-  this.type = opts.type;
-  this.registry = opts.registry;
-  this.where = opts.where;
-  if (opts.raw == null) {
-    this.raw = opts.name ? opts.name + "@" + opts.rawSpec : opts.rawSpec;
-  } else {
-    this.raw = opts.raw;
+class Result {
+  type: any;
+  registry: any;
+  where: any;
+  name: any;
+  raw: any;
+  escapedName: any;
+  scope: any;
+  rawSpec: string;
+  saveSpec: any;
+  fetchSpec: any;
+  gitRange: any;
+  gitCommittish: any;
+  hosted?: boolean;
+
+  constructor(opts: {
+    fromArgument: boolean;
+    type?: string;
+    registry?: any;
+    where?: any;
+    raw?: string;
+    name?: string;
+    rawSpec?: string;
+    saveSpec?: string;
+    fetchSpec?: string;
+    gitRange?: any;
+    gitCommittish?: boolean;
+    hosted?: boolean;
+  }) {
+    this.type = opts.type;
+    this.registry = opts.registry;
+    this.where = opts.where;
+    if (opts.raw == null) {
+      this.raw = opts.name ? opts.name + "@" + opts.rawSpec : opts.rawSpec;
+    } else {
+      this.raw = opts.raw;
+    }
+    this.name = undefined;
+    this.escapedName = undefined;
+    this.scope = undefined;
+    this.rawSpec = opts.rawSpec == null ? "" : opts.rawSpec;
+    this.saveSpec = opts.saveSpec;
+    this.fetchSpec = opts.fetchSpec;
+    if (opts.name) this.setName(opts.name);
+    this.gitRange = opts.gitRange;
+    this.gitCommittish = opts.gitCommittish;
+    this.hosted = opts.hosted;
   }
-  this.name = undefined;
-  this.escapedName = undefined;
-  this.scope = undefined;
-  this.rawSpec = opts.rawSpec == null ? "" : opts.rawSpec;
-  this.saveSpec = opts.saveSpec;
-  this.fetchSpec = opts.fetchSpec;
-  if (opts.name) this.setName(opts.name);
-  this.gitRange = opts.gitRange;
-  this.gitCommittish = opts.gitCommittish;
-  this.hosted = opts.hosted;
+  setName(name: string) {
+    const valid = validatePackageName(name);
+    if (!valid.validForOldPackages) {
+      throw invalidPackageName(name, valid);
+    }
+    this.name = name;
+    this.scope = name[0] === "@" ? name.slice(0, name.indexOf("/")) : undefined;
+    // scoped packages in couch must have slash url-encoded, e.g. @foo%2Fbar
+    this.escapedName = name.replace("/", "%2f");
+    return this;
+  }
+
+  toString() {
+    const full = [];
+    if (this.name != null && this.name !== "") full.push(this.name);
+    const spec = this.saveSpec || this.fetchSpec || this.rawSpec;
+    if (spec != null && spec !== "") full.push(spec);
+    return full.length ? full.join("@") : this.raw;
+  }
+
+  toJSON() {
+    const result = Object.assign({}, this);
+    delete result.hosted;
+    return result;
+  }
 }
 
-Result.prototype.setName = function(name) {
-  if (!validatePackageName)
-    validatePackageName = require("validate-npm-package-name");
-  const valid = validatePackageName(name);
-  if (!valid.validForOldPackages) {
-    throw invalidPackageName(name, valid);
-  }
-  this.name = name;
-  this.scope = name[0] === "@" ? name.slice(0, name.indexOf("/")) : undefined;
-  // scoped packages in couch must have slash url-encoded, e.g. @foo%2Fbar
-  this.escapedName = name.replace("/", "%2f");
-  return this;
-};
-
-Result.prototype.toString = function() {
-  const full = [];
-  if (this.name != null && this.name !== "") full.push(this.name);
-  const spec = this.saveSpec || this.fetchSpec || this.rawSpec;
-  if (spec != null && spec !== "") full.push(spec);
-  return full.length ? full.join("@") : this.raw;
-};
-
-Result.prototype.toJSON = function() {
-  const result = Object.assign({}, this);
-  delete result.hosted;
-  return result;
-};
-
-function setGitCommittish(res, committish) {
+function setGitCommittish(res: any, committish: any) {
   if (
     committish != null &&
     committish.length >= 7 &&
@@ -172,18 +186,18 @@ function setGitCommittish(res, committish) {
 
 const isAbsolutePath = /^[/]|^[A-Za-z]:/;
 
-function resolvePath(where, spec) {
+function resolvePath(where: string, spec: any) {
   if (isAbsolutePath.test(spec)) return spec;
-  return path().resolve(where, spec);
+  return path.resolve(where, spec);
 }
 
-function isAbsolute(dir) {
+function isAbsolute(dir: any) {
   if (dir[0] === "/") return true;
   if (/^[A-Za-z]:/.test(dir)) return true;
   return false;
 }
 
-function fromFile(res, where) {
+function fromFile(res: any, where: any) {
   if (!where) where = process.cwd();
   res.type = isFilename.test(res.rawSpec) ? "file" : "directory";
   res.where = where;
@@ -193,22 +207,21 @@ function fromFile(res, where) {
     .replace(/^file:[/]*([A-Za-z]:)/, "$1") // drive name paths on windows
     .replace(/^file:(?:[/]*([~./]))?/, "$1");
   if (/^~[/]/.test(spec)) {
-    // this is needed for windows and for file:~/foo/bar
-    // if (!osenv) osenv = require("osenv");
-    res.fetchSpec = resolvePath(osenv.home(), spec.slice(2));
-    res.saveSpec = "file:" + spec;
+    throw new Error("unsupported protocol: file");
+    // res.fetchSpec = resolvePath(osenv.home(), spec.slice(2));
+    // res.saveSpec = "file:" + spec;
   } else {
     res.fetchSpec = resolvePath(where, spec);
     if (isAbsolute(spec)) {
       res.saveSpec = "file:" + spec;
     } else {
-      res.saveSpec = "file:" + path().relative(where, res.fetchSpec);
+      res.saveSpec = "file:" + path.relative(where, res.fetchSpec);
     }
   }
   return res;
 }
 
-function fromHostedGit(res, hosted) {
+function fromHostedGit(res: any, hosted: any) {
   res.type = "git";
   res.hosted = hosted;
   res.saveSpec = hosted.toString({ noGitPlus: false, noCommittish: false });
@@ -217,13 +230,14 @@ function fromHostedGit(res, hosted) {
   return setGitCommittish(res, hosted.committish);
 }
 
-function unsupportedURLType(protocol, spec) {
+function unsupportedURLType(protocol: any, spec: any) {
   const err = new Error(`Unsupported URL Type "${protocol}": ${spec}`);
+  // @ts-ignore
   err.code = "EUNSUPPORTEDPROTOCOL";
   return err;
 }
 
-function matchGitScp(spec) {
+function matchGitScp(spec: any) {
   // git ssh specifiers are overloaded to also use scp-style git
   // specifiers, so we have to parse those out and treat them special.
   // They are NOT true URIs, so we can't hand them to `url.parse`.
@@ -244,8 +258,7 @@ function matchGitScp(spec) {
   );
 }
 
-function fromURL(res) {
-  if (!url) url = require("url");
+function fromURL(res: any) {
   const urlparse = url.parse(res.rawSpec);
   res.saveSpec = res.rawSpec;
   // check the protocol, and then see if it's git or not
@@ -294,7 +307,7 @@ function fromURL(res) {
   return res;
 }
 
-function fromAlias(res, where) {
+function fromAlias(res: any, where: any) {
   const subSpec = npa(res.rawSpec.substr(4), where);
   if (subSpec.type === "alias") {
     throw new Error("nested aliases not supported");
@@ -310,14 +323,13 @@ function fromAlias(res, where) {
   return res;
 }
 
-function fromRegistry(res) {
+function fromRegistry(res: any) {
   res.registry = true;
   const spec = res.rawSpec === "" ? "latest" : res.rawSpec;
   // no save spec for registry components as we save based on the fetched
   // version, not on the argument so this can't compute that.
   res.saveSpec = null;
   res.fetchSpec = spec;
-  if (!semver) semver = require("semver");
   const version = semver.valid(spec, true);
   const range = semver.validRange(spec, true);
   if (version) {
