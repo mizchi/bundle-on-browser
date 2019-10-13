@@ -1,5 +1,6 @@
 const path = require("path");
 const HTMLPlugin = require("html-webpack-plugin");
+const MonacoPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
   resolve: {
@@ -7,6 +8,10 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
+      },
       {
         test: /\.tsx?$/,
         use: [
@@ -20,7 +25,12 @@ module.exports = {
       }
     ]
   },
+  node: {
+    fs: "empty",
+    module: "empty"
+  },
   plugins: [
+    new MonacoPlugin(),
     new HTMLPlugin({
       template: path.join(__dirname, "src/index.html")
     })

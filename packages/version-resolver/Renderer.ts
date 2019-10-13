@@ -1,4 +1,4 @@
-import { Registry } from "./Registry";
+import { Registry, cache } from "./Registry";
 import { Graph } from "graphlib";
 
 const packageJsonProps = [
@@ -30,7 +30,7 @@ export class Renderer {
   public renderResult() {
     (this.graph.successors("root") as string[]).forEach((depName: string) => {
       const { version, fullName } = this.graph.node(depName);
-      const versionPkg = this.registry.cache[depName].versions[version];
+      const versionPkg = cache[depName].versions[version];
       const appDep = (this.result.appDependencies[depName] = {
         version,
         dependencies: {}
@@ -81,7 +81,7 @@ export class Renderer {
       } else {
         const depName = fullName.substr(0, atIndex);
         const version = fullName.substr(atIndex + 1);
-        const versionPkg = this.registry.cache[depName].versions[version];
+        const versionPkg = cache[depName].versions[version];
         const resDep = (this.result.resDependencies[fullName] = {
           dependencies: {}
         });

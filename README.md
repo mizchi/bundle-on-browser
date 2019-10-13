@@ -1,28 +1,4 @@
-# Minfront
-
-My minimum frontend boilerplate 20191013 with parcel
-
-- yarn
-- parcel
-- typescript
-- jest
-- netlify
-
-This code does **not** include framework, lint, ci, and other (production) tools.
-
-## Bootstrap
-
-```bash
-# ... Setup node and yarn
-$ git clone git@github.com:mizchi-sandbox/minfront.git
-$ cd minfront
-$ yarn install
-$ yarn dev    # Start app server
-```
-
----
-
-# {app_name}
+# Bundle in browser
 
 ## How to dev
 
