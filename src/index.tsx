@@ -1,5 +1,5 @@
 import { h, render } from "preact";
-import resolve from "./local-resolver/resolver";
+import resolve from "./local-resolver";
 
 resolve({
   rxjs: "~5.5.0",

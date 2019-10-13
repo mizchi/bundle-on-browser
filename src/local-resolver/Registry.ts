@@ -1,14 +1,12 @@
 import npa from "./npa";
 
-export default class NpmHttpRegistry {
+export class Registry {
   registryUrl: string;
-  cache: any;
-  fetching: Array<any>;
+  cache: { [key: string]: any };
 
   constructor(options: { registryUrl?: string } = {}) {
     this.registryUrl = options.registryUrl || "https://registry.npmjs.org";
     this.cache = {};
-    this.fetching = [];
   }
 
   public async fetch(name: string) {
