@@ -1,0 +1,10 @@
+{
+  "name": "version-resolver",
+  "version": "0.0.1",
+  "dependencies": {
+    "graphlib": "^2.1.7",
+    "hosted-git-info": "^3.0.2",
+    "semver": "^6.3.0",
+    "validate-npm-package-name": "^3.0.0"
+  }
+}

@@ -12,7 +12,11 @@ const packageJsonProps = [
 ];
 
 export class Renderer {
-  result: any = {
+  result: {
+    appDependencies: any;
+    resDependencies: any;
+    warnings: any;
+  } = {
     appDependencies: {},
     resDependencies: {},
     warnings: {}
@@ -33,6 +37,7 @@ export class Renderer {
       });
       this.fillResultDeps(fullName, versionPkg, appDep);
     });
+
     if (Object.keys(this.invalidPeers).length) {
       this.result.warnings.invalidPeers = this.invalidPeers;
     }

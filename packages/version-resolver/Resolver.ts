@@ -31,6 +31,7 @@ export class Resolver {
     registryUrl: "https://registry.npmjs.cf/"
   });
   private validatePeers: boolean = true;
+
   public async load(deps: { [key: string]: string }) {
     const depNames = Object.keys(deps);
     depNames.forEach(name =>
@@ -42,6 +43,7 @@ export class Resolver {
     );
     await this.registry.batchFetch(depNames);
   }
+
   public async hydrate(): Promise<void> {
     if (this.queue.length === 0) {
       return;
@@ -50,7 +52,7 @@ export class Resolver {
     this.queue = [];
     await Promise.all(
       processing.map(async task => {
-        await this.loadRegistryPackage(task);
+        return this.loadRegistryPackage(task);
       })
     );
     await this.hydrate();
@@ -60,9 +62,11 @@ export class Resolver {
       this.validatePeerDependencies();
     }
     const renderer = new Renderer(this.graph, this.registry, this.invalidPeers);
+    renderer.renderResult();
     return renderer.result;
   }
-  private async loadRegistryPackage(task: Task, done?: Function) {
+
+  private async loadRegistryPackage(task: Task) {
     const name = task.name;
     try {
       const registryPackage = await this.registry.fetch(name);
