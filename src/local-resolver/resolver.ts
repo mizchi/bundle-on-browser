@@ -90,44 +90,42 @@ class Resolver {
       warnings: {}
     };
     this.error = null;
-    this.queue = async.queue((task: any, done: Function) => {
+    this.queue = async.queue(async (task: any, done: Function) => {
       if (Date.now() - this.startTime > this.timeout || this.error) {
         if (!this.error) {
           this.error = { error: "TIMEOUT" };
         }
         return done();
       }
-      this.loadRegistryPackage(task, done);
+      await this.loadRegistryPackage(task, done);
     }, this.concurrency);
 
     this.queue.pause();
   }
 
-  loadRegistryPackage(task: Task, done: Function) {
+  async loadRegistryPackage(task: Task, done?: Function) {
     const name = task.name;
 
     // @ts-ignore
-    this.registry
-      .fetch(name)
-      .then((registryPackage: any) => {
-        this.resolveDependencies(task, registryPackage, done);
-      })
-      .catch(() => {
-        this.error = {
-          error: "PACKAGE_NOT_FOUND",
-          data: { name }
-        };
-        return done();
-      });
+    try {
+      const registryPackage = await this.registry.fetch(name);
+      await this.resolveDependencies(task, registryPackage, done);
+    } catch {
+      this.error = {
+        error: "PACKAGE_NOT_FOUND",
+        data: { name }
+      };
+      return done && done();
+    }
   }
 
   // Resolution & Iteration
-  resolveDependencies(task: Task, registryPackage: any, done: Function) {
+  async resolveDependencies(task: Task, registryPackage: any, done?: Function) {
     const version = resolveVersion(task.version, registryPackage);
     // @ts-ignore
     if (!version || version.error) {
       this.error = version;
-      return done();
+      return done && done();
     }
 
     const fullName = `${registryPackage.name}@${version}`;
@@ -144,7 +142,7 @@ class Resolver {
     }
 
     if (subDepsResolved) {
-      return done();
+      return done && done();
     }
 
     const dependencies = Object.assign(
@@ -177,7 +175,7 @@ class Resolver {
           parentNode: fullName
         })
       );
-      done();
+      done && done();
     });
   }
 
