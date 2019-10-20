@@ -21,7 +21,6 @@ export async function compile(
       })
     ]
   });
-  console.log("--- passed");
   const result = await bundle.generate({
     format: "iife"
   });

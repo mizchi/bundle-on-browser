@@ -12,7 +12,6 @@ const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
 
 export function Editor() {
   const dispatch = useDispatch();
-  // const text = useSelector((s: State) => s.files[filename]);
   const { currentFilename, currentContent } = useSelector((s: State) => {
     return {
       currentFilename: s.editing.filename,
