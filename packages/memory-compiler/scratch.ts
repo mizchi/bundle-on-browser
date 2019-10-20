@@ -14,11 +14,6 @@ const el = h("div", null, "Hello");
 console.log(el, flatten);
 `;
 
-// const code = `
-// import flatten from "lodash.flatten";
-// console.log(flatten);
-// `;
-
 async function main() {
   const out = await compile(pkg, code);
   console.log(out);

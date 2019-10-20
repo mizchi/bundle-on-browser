@@ -5,14 +5,9 @@ import { createStore } from "redux";
 import { App } from "./components/App";
 
 const deps = {
-  preact: "10.0.0"
+  preact: "*",
+  "lodash.flatten": "*"
 };
-// const deps = {
-//   rxjs: "~5.5.0",
-//   "left-pad": "*",
-//   "zone.js": "latest",
-//   "@angular/core": "~5.2.0"
-// };
 
 const initialPkg = {
   private: true,
@@ -31,7 +26,12 @@ const initialState = {
     filename: "index.ts"
   },
   files: {
-    "index.ts": "const x: number = 3;\nconsole.log('xxx', x);",
+    "index.ts": `
+import flatten from "lodash.flatten";
+import { h } from 'preact';
+const el = h("div", null, "Hello");
+console.log(flatten([[1], 2]));
+`,
     "package.json": JSON.stringify(initialPkg, null, 2)
   }
 };

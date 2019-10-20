@@ -9,6 +9,7 @@
     "deploy": "netlify deploy -d dist --prod"
   },
   "dependencies": {
+    "@babel/core": "^7.6.4",
     "@emotion/core": "^10.0.21",
     "modern-css-reset": "^1.0.4",
     "monaco-editor": "^0.18.1",

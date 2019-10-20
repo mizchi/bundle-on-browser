@@ -4,6 +4,9 @@ const MonacoPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
   resolve: {
+    alias: {
+      "make-fetch-happen": "isomorphic-unfetch"
+    },
     extensions: [".js", ".json", ".ts", ".tsx"]
   },
   module: {

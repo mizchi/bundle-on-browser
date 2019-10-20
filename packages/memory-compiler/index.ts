@@ -1,29 +1,30 @@
 import { rollup } from "rollup";
 import commonjs from "rollup-plugin-commonjs";
-import urlResolve from "rollup-plugin-url-resolve";
+import urlResolve from "./plugins/url-resolve";
 import virtual from "./plugins/virtual";
-import mymod from "./plugins/mymod";
+import rewriteToCdn from "./plugins/rewrite-to-cdn";
 
-export async function compile(pkg: { dependencies: any }, code: string) {
+export async function compile(
+  pkg: { dependencies: any },
+  code: string
+): Promise<string> {
   const bundle = await rollup({
     input: "index.js",
     plugins: [
       virtual({
         "index.js": code
       }),
-      mymod({ dependencies: pkg.dependencies }),
-      // @ts-ignore
-      urlResolve(),
+      rewriteToCdn({ dependencies: pkg.dependencies }),
+      urlResolve() as any,
       commonjs({
         include: /^https:\/\/cdn\.jsdelivr\.net/
       })
     ]
   });
-
+  console.log("--- passed");
   const result = await bundle.generate({
-    format: "umd"
+    format: "iife"
   });
-
   const out = result.output[0];
-  return out;
+  return out.code;
 }

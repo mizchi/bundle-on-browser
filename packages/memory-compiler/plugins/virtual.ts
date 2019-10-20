@@ -2,7 +2,7 @@ import path from "path";
 
 const PREFIX = `\0virtual:`;
 
-export default function virtual(modules) {
+export default function virtual(modules: any) {
   const resolvedIds = new Map();
 
   Object.keys(modules).forEach(id => {
@@ -12,7 +12,7 @@ export default function virtual(modules) {
   return {
     name: "virtual",
 
-    resolveId(id, importer) {
+    resolveId(id: string, importer: any) {
       if (id in modules) return PREFIX + id;
 
       if (importer) {
@@ -23,7 +23,7 @@ export default function virtual(modules) {
       }
     },
 
-    load(id) {
+    load(id: string) {
       if (id.startsWith(PREFIX)) {
         id = id.slice(PREFIX.length);
 

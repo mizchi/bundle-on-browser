@@ -3,26 +3,21 @@ import resolvePkgVersions from "version-resolver";
 import { cache } from "version-resolver/Registry";
 import { useSelector } from "react-redux";
 import { State } from "../index";
-import * as rollup from "rollup";
 import terser from "terser";
-import commonjs from "rollup-plugin-commonjs";
 // @ts-ignore
-import urlResolve from "rollup-plugin-url-resolve";
+// import ses from "ses";
+import { compile } from "memory-compiler";
 import { transpileModule, ModuleKind, ScriptTarget } from "typescript";
-// @ts-ignore
-import virtual from "rollup-plugin-virtual";
-// @ts-ignore
-import ses from "ses";
 
 export function Preview() {
-  const text = useSelector((s: State) => s.files["package.json"]);
-  const index = useSelector((s: State) => s.files["index.ts"]);
+  const pkgText = useSelector((s: State) => s.files["package.json"]);
+  const indexText = useSelector((s: State) => s.files["index.ts"]);
 
   const [resolved, setResolved] = useState<any | null>(null);
   const [output, setOutput] = useState<any | null>(null);
 
   const onClickResolve = useCallback(async () => {
-    const pkg = JSON.parse(text);
+    const pkg = JSON.parse(pkgText);
     const results = await resolvePkgVersions(pkg.dependencies);
     Object.entries(results.appDependencies)
       .slice(0, 3)
@@ -38,13 +33,17 @@ export function Preview() {
         // console.log(key, rawTarball);
       });
     setResolved(results);
-  }, [text]);
+  }, [pkgText]);
 
   const onClickBundle = useCallback(async () => {
-    const code = await compile(index, { filename: "index.ts", minify: true });
+    const code = await compileWithInput(indexText, {
+      filename: "index.ts",
+      minify: true,
+      pkgText
+    });
     // evaluateOnSandbox(code);
     setOutput(code);
-  }, [index]);
+  }, [indexText, pkgText]);
 
   return (
     <div style={{ overflow: "auto", height: "100vh" }}>
@@ -77,14 +76,16 @@ export function Preview() {
 }
 
 function evaluateOnSandbox(code: string) {
-  const s = ses.makeSESRootRealm();
-  console.log(code);
-  s.evaluate(code, { console: console });
+  eval(code);
+  // const s = ses.makeSESRootRealm();
+  // console.log(code);
+  // s.evaluate(code, { console: console, Symbol });
 }
 
-async function compile(
+async function compileWithInput(
   code: string,
   options: {
+    pkgText?: string;
     filename: string;
     minify?: boolean;
     typescript?: boolean;
@@ -93,22 +94,10 @@ async function compile(
   const jsIndex = transpileModule(code, {
     compilerOptions: { module: ModuleKind.ES2015, target: ScriptTarget.ES5 }
   });
+  const pkg = JSON.parse(options.pkgText || "{}");
+  const out = await compile(pkg, jsIndex.outputText);
+  // return out;
 
-  const bundle = await rollup.rollup({
-    input: "index.js",
-    plugins: [
-      virtual({
-        "index.js": jsIndex.outputText
-      }),
-      urlResolve(),
-      commonjs({
-        include: /^https:\/\/cdn\.jsdelivr\.net/
-      })
-    ]
-  });
-
-  const { output } = await bundle.generate({ format: "iife" });
-  const out = output[0].code;
   if (options.minify) {
     const minfied = terser.minify(out);
     return minfied.code as string;

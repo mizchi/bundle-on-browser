@@ -1,12 +1,12 @@
 import resolve from "version-resolver";
 import path from "path";
 
-let resolvedVersions = null;
+let resolvedVersions: any = null;
 const pattern = /import\s(.*?)\sfrom\s['"]([@\w\d\-_\/\.]+)['"]/;
 
-export default function mymod(options: { dependencies: any }) {
+export default function rewriteToCdn(options: { dependencies: any }) {
   return {
-    name: "mymod",
+    name: "rewrite-to-cdn",
     async transform(code: string, _id: string) {
       resolvedVersions =
         resolvedVersions || (await resolve(options.dependencies));
