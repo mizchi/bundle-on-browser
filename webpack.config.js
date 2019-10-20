@@ -27,7 +27,10 @@ module.exports = {
   },
   node: {
     fs: "empty",
-    module: "empty"
+    module: "empty",
+    dns: "empty",
+    net: "empty",
+    tls: "empty"
   },
   plugins: [
     new MonacoPlugin(),

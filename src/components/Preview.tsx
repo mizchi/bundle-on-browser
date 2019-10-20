@@ -1,10 +1,13 @@
 import React, { useCallback, useState } from "react";
-import resolve from "version-resolver";
+import resolvePkgVersions from "version-resolver";
 import { cache } from "version-resolver/Registry";
 import { useSelector } from "react-redux";
 import { State } from "../index";
 import * as rollup from "rollup";
 import terser from "terser";
+import commonjs from "rollup-plugin-commonjs";
+// @ts-ignore
+import urlResolve from "rollup-plugin-url-resolve";
 import { transpileModule, ModuleKind, ScriptTarget } from "typescript";
 // @ts-ignore
 import virtual from "rollup-plugin-virtual";
@@ -20,7 +23,7 @@ export function Preview() {
 
   const onClickResolve = useCallback(async () => {
     const pkg = JSON.parse(text);
-    const results = await resolve(pkg.dependencies);
+    const results = await resolvePkgVersions(pkg.dependencies);
     Object.entries(results.appDependencies)
       .slice(0, 3)
       .map(async ([key, val]: [string, any]) => {
@@ -96,6 +99,10 @@ async function compile(
     plugins: [
       virtual({
         "index.js": jsIndex.outputText
+      }),
+      urlResolve(),
+      commonjs({
+        include: /^https:\/\/cdn\.jsdelivr\.net/
       })
     ]
   });
