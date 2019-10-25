@@ -13,6 +13,8 @@
     "@emotion/core": "^10.0.22",
     "modern-css-reset": "^1.0.4",
     "monaco-editor": "^0.18.1",
+    "monaco-editor-core": "^0.18.1",
+    "monaco-typescript": "^3.5.1",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-redux": "^7.1.1",
