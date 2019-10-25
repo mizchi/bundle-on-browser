@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
+import * as monaco from "monaco-editor";
 
 import { LanguageServiceDefaultsImpl } from './monaco.contribution';
-import * as ts from './lib/typescriptServices';
+import * as ts from 'typescript';
 import { TypeScriptWorker } from './tsWorker';
 
 import Uri = monaco.Uri;
@@ -63,12 +64,12 @@ export abstract class Adapter {
 	}
 
 	protected _positionToOffset(uri: Uri, position: monaco.IPosition): number {
-		let model = monaco.editor.getModel(uri);
+		let model = monaco.editor.getModel(uri) as monaco.editor.ITextModel;
 		return model.getOffsetAt(position);
 	}
 
 	protected _offsetToPosition(uri: Uri, offset: number): monaco.IPosition {
-		let model = monaco.editor.getModel(uri);
+		let model = monaco.editor.getModel(uri) as monaco.editor.ITextModel;
 		return model.getPositionAt(offset);
 	}
 
@@ -101,6 +102,7 @@ export class DiagnosticsAdapter extends Adapter {
 			let handle: number;
 			const changeSubscription = model.onDidChangeContent(() => {
 				clearTimeout(handle);
+				// @ts-ignore
 				handle = setTimeout(() => this._doValidate(model.uri), 500);
 			});
 
@@ -163,6 +165,7 @@ export class DiagnosticsAdapter extends Adapter {
 				return null;
 			}
 			const promises: Promise<ts.Diagnostic[]>[] = [];
+			// @ts-ignore
 			const { noSyntaxValidation, noSemanticValidation, noSuggestionDiagnostics } = this._defaults.getDiagnosticsOptions();
 			if (!noSyntaxValidation) {
 				promises.push(worker.getSyntacticDiagnostics(resource.toString()));
@@ -183,14 +186,16 @@ export class DiagnosticsAdapter extends Adapter {
 				.reduce((p, c) => c.concat(p), [])
 				.map(d => this._convertDiagnostics(resource, d));
 
-			monaco.editor.setModelMarkers(monaco.editor.getModel(resource), this._selector, markers);
+			monaco.editor.setModelMarkers(monaco.editor.getModel(resource) as monaco.editor.ITextModel, this._selector, markers);
 		}).then(undefined, err => {
 			console.error(err);
 		});
 	}
 
 	private _convertDiagnostics(resource: Uri, diag: ts.Diagnostic): monaco.editor.IMarkerData {
+		// @ts-ignore
 		const { lineNumber: startLineNumber, column: startColumn } = this._offsetToPosition(resource, diag.start);
+		// @ts-ignore
 		const { lineNumber: endLineNumber, column: endColumn } = this._offsetToPosition(resource, diag.start + diag.length);
 
 		return {
@@ -233,6 +238,7 @@ export class SuggestAdapter extends Adapter implements monaco.languages.Completi
 		const resource = model.uri;
 		const offset = this._positionToOffset(resource, position);
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getCompletionsAtPosition(resource.toString(), offset);
 		}).then(info => {
@@ -285,6 +291,7 @@ export class SuggestAdapter extends Adapter implements monaco.languages.Completi
 				kind: SuggestAdapter.convertKind(details.kind),
 				detail: displayPartsToString(details.displayParts),
 				documentation: {
+					// @ts-ignore
 					value: displayPartsToString(details.documentation)
 				}
 			};
@@ -331,6 +338,7 @@ export class SignatureHelpAdapter extends Adapter implements monaco.languages.Si
 
 	provideSignatureHelp(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.SignatureHelpResult> {
 		let resource = model.uri;
+		// @ts-ignore
 		return this._worker(resource).then(worker => worker.getSignatureHelpItems(resource.toString(), this._positionToOffset(resource, position))).then(info => {
 
 			if (!info) {
@@ -382,12 +390,14 @@ export class QuickInfoAdapter extends Adapter implements monaco.languages.HoverP
 	provideHover(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.Hover> {
 		let resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getQuickInfoAtPosition(resource.toString(), this._positionToOffset(resource, position));
 		}).then(info => {
 			if (!info) {
 				return;
 			}
+			// @ts-ignore
 			let documentation = displayPartsToString(info.documentation);
 			let tags = info.tags ? info.tags.map(tag => {
 				const label = `*@${tag.name}*`;
@@ -397,6 +407,7 @@ export class QuickInfoAdapter extends Adapter implements monaco.languages.HoverP
 				return label + (tag.text.match(/\r\n|\n/g) ? ' \n' + tag.text : ` - ${tag.text}`);
 			})
 				.join('  \n\n') : '';
+			// @ts-ignore
 			let contents = displayPartsToString(info.displayParts);
 			return {
 				range: this._textSpanToRange(resource, info.textSpan),
@@ -417,6 +428,7 @@ export class OccurrencesAdapter extends Adapter implements monaco.languages.Docu
 	public provideDocumentHighlights(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.DocumentHighlight[]> {
 		const resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getOccurrencesAtPosition(resource.toString(), this._positionToOffset(resource, position));
 		}).then(entries => {
@@ -440,6 +452,7 @@ export class DefinitionAdapter extends Adapter {
 	public provideDefinition(model: monaco.editor.IReadOnlyModel, position: Position, token: CancellationToken): Thenable<monaco.languages.Definition> {
 		const resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getDefinitionAtPosition(resource.toString(), this._positionToOffset(resource, position));
 		}).then(entries => {
@@ -468,6 +481,7 @@ export class ReferenceAdapter extends Adapter implements monaco.languages.Refere
 	provideReferences(model: monaco.editor.IReadOnlyModel, position: Position, context: monaco.languages.ReferenceContext, token: CancellationToken): Thenable<monaco.languages.Location[]> {
 		const resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getReferencesAtPosition(resource.toString(), this._positionToOffset(resource, position));
 		}).then(entries => {
@@ -496,6 +510,7 @@ export class OutlineAdapter extends Adapter implements monaco.languages.Document
 	public provideDocumentSymbols(model: monaco.editor.IReadOnlyModel, token: CancellationToken): Thenable<monaco.languages.DocumentSymbol[]> {
 		const resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => worker.getNavigationBarItems(resource.toString())).then(items => {
 			if (!items) {
 				return;
@@ -607,10 +622,11 @@ export abstract class FormatHelper extends Adapter {
 }
 
 export class FormatAdapter extends FormatHelper implements monaco.languages.DocumentRangeFormattingEditProvider {
-
+	// @ts-ignore
 	provideDocumentRangeFormattingEdits(model: monaco.editor.IReadOnlyModel, range: Range, options: monaco.languages.FormattingOptions, token: CancellationToken): Thenable<monaco.editor.ISingleEditOperation[]> {
 		const resource = model.uri;
 
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getFormattingEditsForRange(resource.toString(),
 				this._positionToOffset(resource, { lineNumber: range.startLineNumber, column: range.startColumn }),
@@ -630,9 +646,10 @@ export class FormatOnTypeAdapter extends FormatHelper implements monaco.language
 		return [';', '}', '\n'];
 	}
 
+	// @ts-ignore
 	provideOnTypeFormattingEdits(model: monaco.editor.IReadOnlyModel, position: Position, ch: string, options: monaco.languages.FormattingOptions, token: CancellationToken): Thenable<monaco.editor.ISingleEditOperation[]> {
 		const resource = model.uri;
-
+		// @ts-ignore
 		return this._worker(resource).then(worker => {
 			return worker.getFormattingEditsAfterKeystroke(resource.toString(),
 				this._positionToOffset(resource, position),

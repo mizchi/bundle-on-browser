@@ -10,7 +10,7 @@ import { TypeScriptWorker } from "./tsWorker";
 
 self.onmessage = () => {
   // ignore the first message
-  worker.initialize((ctx, createData) => {
+  worker.initialize((ctx: any, createData: any) => {
     return new TypeScriptWorker(ctx, createData);
   });
 };
