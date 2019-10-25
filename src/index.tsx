@@ -5,8 +5,9 @@ import { createStore } from "redux";
 import { App } from "./components/App";
 
 const deps = {
-  preact: "*",
-  "lodash.flatten": "*"
+  preact: "10.*.*",
+  "lodash.flatten": "*",
+  react: "16.*.*"
 };
 
 const initialPkg = {
@@ -21,17 +22,29 @@ export type State = {
   files: { [key: string]: string };
 };
 
+// const initialState = {
+//   editing: {
+//     filename: "index.ts"
+//   },
+//   files: {
+//     "index.ts": `// Bundle and run
+// // import React from 'react';
+// import flatten from "lodash.flatten";
+// import { h } from 'preact';
+// const el = h("div", null, "Hello");
+// console.log(flatten([[1], 2]), el);
+// `,
+//     "package.json": JSON.stringify(initialPkg, null, 2)
+//   }
+// };
+
 const initialState = {
   editing: {
     filename: "index.ts"
   },
   files: {
-    "index.ts": `
-import flatten from "lodash.flatten";
-import { h } from 'preact';
-const el = h("div", null, "Hello");
-console.log(flatten([[1], 2]));
-`,
+    "index.ts": `import React from "react";
+console.log(React);`,
     "package.json": JSON.stringify(initialPkg, null, 2)
   }
 };

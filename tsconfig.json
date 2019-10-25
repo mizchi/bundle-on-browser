@@ -1,5 +1,10 @@
 {
-  "include": ["src", "packages/version-resolver", "virtual.js"],
+  "include": [
+    "src",
+    "packages/version-resolver",
+    "virtual.js",
+    "src/components/.tsx"
+  ],
   "exclude": ["node_modules"],
   "compilerOptions": {
     /* Basic Options */

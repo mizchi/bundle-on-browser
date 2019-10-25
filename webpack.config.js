@@ -1,12 +1,22 @@
 const path = require("path");
 const HTMLPlugin = require("html-webpack-plugin");
-const MonacoPlugin = require("monaco-editor-webpack-plugin");
+// const MonacoPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
+  entry: {
+    main: path.join(__dirname, "src/index"),
+    // "ts-worker": path.join(""),
+    "json.worker": "monaco-editor/esm/vs/language/json/json.worker",
+    "css.worker": "monaco-editor/esm/vs/language/css/css.worker",
+    "html.worker": "monaco-editor/esm/vs/language/html/html.worker",
+    "ts.worker": "monaco-editor/esm/vs/language/typescript/ts.worker",
+    "editor.worker": "monaco-editor/esm/vs/editor/editor.worker.js"
+  },
+  output: {
+    path: path.join(__dirname, "dist"),
+    filename: "[name].bundle.js"
+  },
   resolve: {
-    alias: {
-      "make-fetch-happen": "isomorphic-unfetch"
-    },
     extensions: [".js", ".json", ".ts", ".tsx"]
   },
   module: {
@@ -36,9 +46,10 @@ module.exports = {
     tls: "empty"
   },
   plugins: [
-    new MonacoPlugin(),
+    // new MonacoPlugin(),
     new HTMLPlugin({
-      template: path.join(__dirname, "src/index.html")
+      template: path.join(__dirname, "src/index.html"),
+      inject: false
     })
   ]
 };

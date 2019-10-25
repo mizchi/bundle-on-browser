@@ -3,7 +3,8 @@ import { compile } from "./index";
 const pkg = {
   dependencies: {
     preact: "*",
-    "lodash.flatten": "*"
+    "lodash.flatten": "*",
+    react: "16.*.*"
   }
 };
 
@@ -15,7 +16,7 @@ console.log(el, flatten);
 `;
 
 async function main() {
-  const out = await compile(pkg, code);
+  const out = await compile(code, { pkg });
   console.log(out);
 }
 
