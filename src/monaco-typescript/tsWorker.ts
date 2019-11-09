@@ -1,24 +1,26 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-"use strict";
-
 import * as ts from "typescript";
 import { lib_dts, lib_es6_dts } from "./lib/lib";
-import { IExtraLibs } from "./monaco.contribution";
 import * as monaco from "monaco-editor";
+
+export interface IExtraLib {
+  content: string;
+  version: number;
+}
+
+export interface IExtraLibs {
+  [path: string]: IExtraLib;
+}
 
 import IWorkerContext = monaco.worker.IWorkerContext;
 
 const DEFAULT_LIB = {
   NAME: "defaultLib:lib.d.ts",
-  CONTENTS: lib_dts
+  CONTENTS: lib_dts + ";\ndeclare module 'react' {};"
 };
 
 const ES6_LIB = {
   NAME: "defaultLib:lib.es6.d.ts",
-  CONTENTS: lib_es6_dts
+  CONTENTS: lib_es6_dts + ";\ndeclare module 'react' {};"
 };
 
 export class TypeScriptWorker implements ts.LanguageServiceHost {
@@ -65,6 +67,8 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
       return "1";
     } else if (fileName in this._extraLibs) {
       return String(this._extraLibs[fileName].version);
+    } else {
+      throw new Error("get script version");
     }
   }
 
@@ -82,6 +86,7 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
     } else if (fileName === ES6_LIB.NAME) {
       text = ES6_LIB.CONTENTS;
     } else {
+      // @ts-ignore
       return;
     }
 
@@ -116,7 +121,7 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
 
   getDefaultLibFileName(options: ts.CompilerOptions): string {
     // TODO@joh support lib.es7.d.ts
-    return options.target <= ts.ScriptTarget.ES5
+    return (options.target as ts.ScriptTarget) <= ts.ScriptTarget.ES5
       ? DEFAULT_LIB.NAME
       : ES6_LIB.NAME;
   }
@@ -139,26 +144,26 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
     });
   }
 
-  getSyntacticDiagnostics(fileName: string): Promise<ts.Diagnostic[]> {
+  async getSyntacticDiagnostics(fileName: string): Promise<ts.Diagnostic[]> {
     const diagnostics = this._languageService.getSyntacticDiagnostics(fileName);
     TypeScriptWorker.clearFiles(diagnostics);
-    return Promise.resolve(diagnostics);
+    return diagnostics;
   }
 
-  getSemanticDiagnostics(fileName: string): Promise<ts.Diagnostic[]> {
+  async getSemanticDiagnostics(fileName: string): Promise<ts.Diagnostic[]> {
     const diagnostics = this._languageService.getSemanticDiagnostics(fileName);
     TypeScriptWorker.clearFiles(diagnostics);
-    return Promise.resolve(diagnostics);
+    return diagnostics;
   }
 
-  getSuggestionDiagnostics(
+  async getSuggestionDiagnostics(
     fileName: string
   ): Promise<ts.DiagnosticWithLocation[]> {
     const diagnostics = this._languageService.getSuggestionDiagnostics(
       fileName
     );
     TypeScriptWorker.clearFiles(diagnostics);
-    return Promise.resolve(diagnostics);
+    return diagnostics;
   }
 
   getCompilerOptionsDiagnostics(fileName: string): Promise<ts.Diagnostic[]> {
@@ -167,86 +172,88 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
     return Promise.resolve(diagnostics);
   }
 
-  getCompletionsAtPosition(
+  async getCompletionsAtPosition(
     fileName: string,
     position: number
-  ): Promise<ts.CompletionInfo> {
-    return Promise.resolve(
-      this._languageService.getCompletionsAtPosition(
-        fileName,
-        position,
-        undefined
-      )
-    );
+  ): Promise<ts.WithMetadata<ts.CompletionInfo>> {
+    return this._languageService.getCompletionsAtPosition(
+      fileName,
+      position,
+      undefined
+    ) as ts.WithMetadata<ts.CompletionInfo>;
   }
 
-  getCompletionEntryDetails(
+  async getCompletionEntryDetails(
     fileName: string,
     position: number,
     entry: string
   ): Promise<ts.CompletionEntryDetails> {
-    return Promise.resolve(
-      this._languageService.getCompletionEntryDetails(
-        fileName,
-        position,
-        entry,
-        undefined,
-        undefined,
-        undefined
-      )
-    );
+    return this._languageService.getCompletionEntryDetails(
+      fileName,
+      position,
+      entry,
+      undefined,
+      undefined,
+      undefined
+    ) as ts.CompletionEntryDetails;
   }
 
-  getSignatureHelpItems(
+  async getSignatureHelpItems(
     fileName: string,
     position: number
   ): Promise<ts.SignatureHelpItems> {
-    return Promise.resolve(
-      this._languageService.getSignatureHelpItems(fileName, position, undefined)
+    // @ts-ignore
+    return this._languageService.getSignatureHelpItems(
+      fileName,
+      position,
+      undefined
     );
   }
 
-  getQuickInfoAtPosition(
+  async getQuickInfoAtPosition(
     fileName: string,
     position: number
   ): Promise<ts.QuickInfo> {
-    return Promise.resolve(this._languageService.getQuickInfoAtPosition(
+    return this._languageService.getQuickInfoAtPosition(
       fileName,
       position
-    ) as ts.QuickInfo);
+    ) as ts.QuickInfo;
   }
 
-  getOccurrencesAtPosition(
+  async getOccurrencesAtPosition(
     fileName: string,
     position: number
   ): Promise<ReadonlyArray<ts.ReferenceEntry>> {
-    return Promise.resolve(
-      this._languageService.getOccurrencesAtPosition(fileName, position)
-    );
+    return this._languageService.getOccurrencesAtPosition(
+      fileName,
+      position
+    ) as ts.ReferenceEntry[];
   }
 
-  getDefinitionAtPosition(
+  async getDefinitionAtPosition(
     fileName: string,
     position: number
   ): Promise<ReadonlyArray<ts.DefinitionInfo>> {
-    return Promise.resolve(
-      this._languageService.getDefinitionAtPosition(fileName, position)
-    );
+    return this._languageService.getDefinitionAtPosition(
+      fileName,
+      position
+    ) as ts.DefinitionInfo[];
   }
 
-  getReferencesAtPosition(
+  async getReferencesAtPosition(
     fileName: string,
     position: number
   ): Promise<ts.ReferenceEntry[]> {
-    return Promise.resolve(
-      this._languageService.getReferencesAtPosition(fileName, position)
-    );
+    return this._languageService.getReferencesAtPosition(
+      fileName,
+      position
+    ) as ts.ReferenceEntry[];
   }
 
-  getNavigationBarItems(fileName: string): Promise<ts.NavigationBarItem[]> {
-    return Promise.resolve(
-      this._languageService.getNavigationBarItems(fileName)
-    );
+  async getNavigationBarItems(
+    fileName: string
+  ): Promise<ts.NavigationBarItem[]> {
+    return this._languageService.getNavigationBarItems(fileName);
   }
 
   getFormattingEditsForDocument(
@@ -297,32 +304,28 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
     findInComments: boolean,
     providePrefixAndSuffixTextForRename: boolean
   ): Promise<readonly ts.RenameLocation[]> {
-    return Promise.resolve(
-      this._languageService.findRenameLocations(
-        fileName,
-        positon,
-        findInStrings,
-        findInComments,
-        providePrefixAndSuffixTextForRename
-      )
-    );
+    return this._languageService.findRenameLocations(
+      fileName,
+      positon,
+      findInStrings,
+      findInComments,
+      providePrefixAndSuffixTextForRename
+    ) as any;
   }
 
-  getRenameInfo(
+  async getRenameInfo(
     fileName: string,
     positon: number,
     options: ts.RenameInfoOptions
   ): Promise<ts.RenameInfo> {
-    return Promise.resolve(
-      this._languageService.getRenameInfo(fileName, positon, options)
-    );
+    return this._languageService.getRenameInfo(fileName, positon, options);
   }
 
-  getEmitOutput(fileName: string): Promise<ts.EmitOutput> {
-    return Promise.resolve(this._languageService.getEmitOutput(fileName));
+  async getEmitOutput(fileName: string): Promise<ts.EmitOutput> {
+    return this._languageService.getEmitOutput(fileName);
   }
 
-  getCodeFixesAtPosition(
+  async getCodeFixesAtPosition(
     fileName: string,
     start: number,
     end: number,
@@ -330,15 +333,13 @@ export class TypeScriptWorker implements ts.LanguageServiceHost {
     formatOptions: ts.FormatCodeOptions
   ): Promise<ReadonlyArray<ts.CodeFixAction>> {
     const preferences = {};
-    return Promise.resolve(
-      this._languageService.getCodeFixesAtPosition(
-        fileName,
-        start,
-        end,
-        errorCodes,
-        formatOptions,
-        preferences
-      )
+    return this._languageService.getCodeFixesAtPosition(
+      fileName,
+      start,
+      end,
+      errorCodes,
+      formatOptions,
+      preferences
     );
   }
 
