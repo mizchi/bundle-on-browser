@@ -7,6 +7,22 @@
 - `yarn test`: Run jest
 - `yarn deploy`: Deploy to netlify (need netlify account)
 
+## TODO
+
+- [x] virtual fs
+- [x] transform ts on compile
+- [ ] UI: validate filename
+- [ ] load types with @types/xxx
+- [ ] load types with .d.ts in repo
+- [ ] Persist current fs
+- [ ] Self bootstrap rollup compiler
+- [x] compile with tsconfig.json
+- [ ] eslint
+- [ ] test-runner
+- [x] filer: add
+- [x] filer: delete
+- [ ] filer: rename
+
 ## LICENSE
 
 MIT

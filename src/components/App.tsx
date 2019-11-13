@@ -9,12 +9,8 @@ export function App() {
       <div style={{ width: "180px" }}>
         <Filer />
       </div>
-      <div style={{ flex: 1 }}>
-        <Editor />
-      </div>
-      <div style={{ flex: 1 }}>
-        <Preview />
-      </div>
+      <div style={{ flex: 1 }}>{<Editor />}</div>
+      <div style={{ flex: 1 }}>{<Preview />}</div>
     </div>
   );
 }

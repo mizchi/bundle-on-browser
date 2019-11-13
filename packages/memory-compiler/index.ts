@@ -1,31 +1,36 @@
 import { rollup } from "rollup";
-import commonjs from "rollup-plugin-commonjs";
-// @ts-ignore
-import virtual from "rollup-plugin-virtual";
-import terser from "terser";
-import { transpileModule, ModuleKind, ScriptTarget } from "typescript";
 import cdnResolver from "rollup-plugin-cdn-resolver";
+import commonjs from "rollup-plugin-commonjs";
+import terser from "terser";
+import { parseConfigFileTextToJson, transpileModule } from "typescript";
+import memfs from "./plugins/memfs";
 
-export async function compile(
-  code: string,
-  options: {
-    pkg: { dependencies: any };
-    minify?: boolean;
-    typescript?: boolean;
-  }
-): Promise<string> {
-  const jsIndex = transpileModule(code, {
-    compilerOptions: { module: ModuleKind.ES2015, target: ScriptTarget.ES5 }
-  });
+export async function compile(options: {
+  files: { [filepath: string]: string };
+  pkg: { dependencies: any };
+  tsConfig: any;
+  minify?: boolean;
+  typescript?: boolean;
+}): Promise<string> {
+  const parsedTsConfig = parseConfigFileTextToJson(
+    "/tsconfig.json",
+    options.tsConfig
+  );
+
   const bundle = await rollup({
-    input: "index.js",
+    input: "/index",
     plugins: [
-      virtual({
-        "index.js": jsIndex.outputText
+      memfs(options.files, {
+        transform(filename: string, value: string) {
+          if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
+            const out = transpileModule(value, parsedTsConfig.config);
+            return out.outputText;
+          } else {
+            return value;
+          }
+        }
       }),
       cdnResolver({ pkg: options.pkg }) as any,
-      // rewriteToCdn({ dependencies: options.pkg.dependencies }),
-      // urlResolve() as any,
       commonjs({
         include: /^https:\/\/cdn\.jsdelivr\.net/
       })

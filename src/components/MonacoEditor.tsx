@@ -1,81 +1,40 @@
 import * as monaco from "monaco-editor";
-import React, { useEffect } from "react";
-import { useLayoutEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ResizeDetector } from "./ResizeDetector";
-
-// @ts-ignore
-globalThis.MonacoEnvironment = {
-  getWorkerUrl: function(_moduleId: string, label: string) {
-    if (label === "json") {
-      return "./json.worker.bundle.js";
-    }
-    if (label === "css") {
-      return "./css.worker.bundle.js";
-    }
-    if (label === "html") {
-      return "./html.worker.bundle.js";
-    }
-    if (label === "typescript" || label === "javascript") {
-      return "./ts.worker.bundle.js";
-    }
-    return "./editor.worker.bundle.js";
-  }
-};
+import * as mfs from "../helpers/monacoFileSystem";
 
 export default (props: {
-  value: string;
+  filepath: string;
   width: string;
-  language: "json" | "javascript" | "typescript";
-  onChangeValue: (value: string) => void;
+  onChangeValue: (filename: string, value: string) => void;
 }) => {
+  const [currentFilepath, setCurrentFilepath] = useState<string | null>(null);
   const [
-    editor,
-    setEditor
-  ] = useState<null | monaco.editor.IStandaloneCodeEditor>(null);
-
-  const [initialValue, setInitialValue] = useState(props.value);
-  useLayoutEffect(() => {
-    if (initialValue !== props.value) {
-      setInitialValue(props.value);
-      if (editor && editor.getValue() !== props.value) {
-        editor.setValue(props.value);
-      }
-    }
-  }, [props.value]);
-
+    currentEditor,
+    setCurrentEditor
+  ] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const editorRef = useRef(null as any);
 
   useEffect(() => {
     if (editorRef.current) {
-      const newEditor = monaco.editor.create(editorRef.current, {
-        value: props.value,
-        language: props.language,
-        theme: "vs-dark",
-        scrollbar: {
-          arrowSize: 11
-        },
-        fontSize: 16,
-        // useTabStops: true,
-        wordWrap: "on",
-        wordWrapMinified: true,
-        // wrappingIndent: "indent",
-        minimap: {
-          enabled: false
-        },
-        lineNumbers: "off"
-      });
-      newEditor.onDidChangeModelContent(event => {
-        const value = newEditor.getValue();
-        props.onChangeValue(value);
-      });
-      newEditor.layout();
-      newEditor.focus();
-      setEditor(newEditor);
-      return () => {
-        newEditor.dispose();
-      };
+      const editor = mfs.buildEditor(editorRef.current);
+      setCurrentEditor(editor);
+      editor.layout();
+      editor.focus();
+      // file changed
+      if (currentFilepath !== props.filepath && editor) {
+        setCurrentFilepath(props.filepath);
+        const model =
+          mfs.findFile(props.filepath) || mfs.writeFile(props.filepath, "");
+        editor.setModel(model);
+        const disposer = editor.onDidChangeModelContent(_event => {
+          props.onChangeValue(props.filepath, editor.getValue());
+        });
+        return () => disposer.dispose();
+        // outer value changed
+      }
     }
-  }, []);
+  }, [props.filepath]);
 
   return (
     <ResizeDetector
@@ -86,8 +45,8 @@ export default (props: {
         overflow: "none"
       }}
       onResize={rect => {
-        editor &&
-          editor.layout({
+        currentEditor &&
+          currentEditor.layout({
             width: rect.width as any,
             height: rect.height as any
           });

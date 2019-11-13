@@ -1,42 +1,33 @@
-import React from "react";
+import React, { useCallback } from "react";
 import MonacoEditor from "./MonacoEditor";
 import { useSelector, useDispatch } from "react-redux";
 import { State } from "../index";
 import path from "path";
 
-const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
-  ".js": "javascript",
-  ".ts": "typescript",
-  ".json": "json"
-};
-
 export function Editor() {
   const dispatch = useDispatch();
-  const { currentFilename, currentContent } = useSelector((s: State) => {
+  const { currentFilename } = useSelector((s: State) => {
     return {
-      currentFilename: s.editing.filename,
-      currentContent: s.files[s.editing.filename]
+      files: s.files,
+      currentFilename: s.editing.filepath
     };
   });
 
-  const extname = path.extname(currentFilename);
-  const lang = extToLang[extname as any];
+  const onChangeValue = useCallback((filename: string, content: string) => {
+    dispatch({
+      type: "update-file",
+      payload: {
+        filename,
+        content
+      }
+    });
+  }, []);
 
   return (
     <div style={{ width: "50vw" }}>
       <MonacoEditor
-        language={lang}
-        key={currentFilename}
-        value={currentContent}
-        onChangeValue={value => {
-          dispatch({
-            type: "update-file",
-            payload: {
-              filename: currentFilename,
-              content: value
-            }
-          });
-        }}
+        filepath={path.resolve(currentFilename)}
+        onChangeValue={onChangeValue}
         width="calc(100vw / 2)"
       />
     </div>

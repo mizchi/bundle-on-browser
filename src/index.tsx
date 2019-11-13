@@ -1,8 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { createStore } from "redux";
+import { createStore, AnyAction } from "redux";
 import { App } from "./components/App";
+import { fromJSON, toJSON } from "./helpers/monacoFileSystem";
 
 const deps = {
   preact: "10.*.*",
@@ -15,72 +16,58 @@ const initialPkg = {
   dependencies: deps
 };
 
-export type State = {
-  editing: {
-    filename: string;
-  };
-  files: { [key: string]: string };
+const initialTsConfig = {
+  compilerOptions: {
+    target: "es2019",
+    module: "esNext"
+  }
 };
 
-// const initialState = {
-//   editing: {
-//     filename: "index.ts"
-//   },
-//   files: {
-//     "index.ts": `// Bundle and run
-// // import React from 'react';
-// import flatten from "lodash.flatten";
-// import { h } from 'preact';
-// const el = h("div", null, "Hello");
-// console.log(flatten([[1], 2]), el);
-// `,
-//     "package.json": JSON.stringify(initialPkg, null, 2)
-//   }
-// };
-
-const initialState = {
+export type State = {
   editing: {
-    filename: "index.ts"
-  },
-  files: {
-    "index.ts": `import React from "react";
-console.log(React);`,
-    "package.json": JSON.stringify(initialPkg, null, 2)
-  }
+    filepath: string;
+  };
+  files: Array<{
+    filepath: string;
+  }>;
+};
+
+const initialFS = {
+  // "/index.ts": `import { foo } from './foo';\nimport React from "react";\nconsole.log(React);`,
+  "/index.ts": `import { foo } from './foo';\nfoo.a();`,
+  "/foo.ts": "export const foo = { a: () => console.log('xxx') }",
+  "/package.json": JSON.stringify(initialPkg, null, 2),
+  "/tsconfig.json": JSON.stringify(initialTsConfig, null, 2)
 };
 
 type Action =
   | {
-      type: "update-file";
+      type: "update-files";
       payload: {
-        filename: string;
-        content: string;
+        files: Array<{ filepath: string }>;
       };
     }
   | {
       type: "select-file";
       payload: {
-        filename: string;
+        filepath: string;
       };
     };
 
-const reducer = (state: State = initialState, action: Action) => {
+const reducer = (state: State, action: Action) => {
   switch (action.type) {
     case "select-file": {
       return {
         ...state,
         editing: {
-          filename: action.payload.filename
+          filepath: action.payload.filepath
         }
       };
     }
-    case "update-file": {
+    case "update-files": {
       return {
         ...state,
-        files: {
-          ...state.files,
-          [action.payload.filename]: action.payload.content
-        }
+        files: action.payload.files
       };
     }
     default: {
@@ -89,10 +76,26 @@ const reducer = (state: State = initialState, action: Action) => {
   }
 };
 
-const store = createStore(reducer as any);
-
 async function main() {
+  fromJSON(initialFS);
+  const data = toJSON();
+  const fileNames = Object.keys(data);
+  const initialState: State = {
+    editing: {
+      filepath: fileNames[0]
+    },
+    files: fileNames.map(f => ({
+      filepath: f
+    }))
+  };
+
+  const store = createStore<State, AnyAction, any, any>(
+    reducer as any,
+    initialState
+  );
+
   const root = document.querySelector(".root") as HTMLDivElement;
+
   ReactDOM.render(
     <Provider store={store}>
       <App />

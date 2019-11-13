@@ -1,19 +1,26 @@
 import React, { useCallback, useState } from "react";
-import { useSelector } from "react-redux";
-import { State } from "../index";
 import { compile } from "memory-compiler";
+import * as mfs from "../helpers/monacoFileSystem";
 
 export function Preview() {
-  const pkgText = useSelector((s: State) => s.files["package.json"]);
-  const indexText = useSelector((s: State) => s.files["index.ts"]);
   const [output, setOutput] = useState<any | null>(null);
+
   const onClickBundle = useCallback(async () => {
-    const code = await compile(indexText, {
-      minify: true,
-      pkg: JSON.parse(pkgText)
-    });
-    setOutput(code);
-  }, [indexText, pkgText]);
+    const pkgModel = mfs.findFile("/package.json");
+    const tsconfigModel = mfs.findFile("/tsconfig.json");
+    if (pkgModel && tsconfigModel) {
+      const fileMap = mfs.toJSON();
+      const code = await compile({
+        files: fileMap,
+        // tsConfig: JSON.parse(tsconfigModel.getValue()),
+        tsConfig: tsconfigModel.getValue(),
+
+        // minify: true,
+        pkg: JSON.parse(pkgModel.getValue())
+      });
+      setOutput(code);
+    }
+  }, []);
   return (
     <div style={{ overflow: "auto", height: "100vh" }}>
       <div>
