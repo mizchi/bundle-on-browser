@@ -3,7 +3,7 @@ import path from "path";
 const PREFIX = `memfs:`;
 const DEFAULT_EXTENSIONS = [".tsx", ".ts", ".js", ".json"];
 
-export default function virtual(
+export default function memfs(
   files: { [k: string]: string },
   options?: {
     extensions?: string[];
@@ -13,7 +13,7 @@ export default function virtual(
   return {
     name: "memfs",
     resolveId(id: string, importer: any) {
-      console.log("[resolveId:input]", id, importer);
+      // console.log("[resolveId:input]", id, importer);
       if (importer?.startsWith(PREFIX)) {
         importer = importer.slice(PREFIX.length);
         const resolvedId = path.resolve(path.dirname(importer), id);
@@ -30,7 +30,7 @@ export default function virtual(
     },
 
     load(id: string) {
-      console.log("virtual load id", id);
+      // console.log("virtual load id", id);
       if (id.startsWith(PREFIX)) {
         const fpath = id.slice(PREFIX.length);
         const rawValue = files[fpath];
@@ -55,7 +55,6 @@ function findFile(
 
   const reg = new RegExp(path.extname(id) + "$");
   const base = id.replace(reg, "");
-  // const extnames = [".tsx", ".ts", ".js", ".json"];
   for (const ext of extensions) {
     const p = base + ext;
     if (files[p]) {

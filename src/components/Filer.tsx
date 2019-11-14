@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { State } from "..";
-import * as mfs from "../helpers/monacoFileSystem";
+import { State } from "../store/index";
+import { deleteFile, addFile, selectFile, reset } from "../store/actions";
 
 export function Filer() {
   const { files, currentFileId } = useSelector((s: State) => {
@@ -21,10 +21,7 @@ export function Filer() {
           >
             <span
               onClick={() => {
-                dispatch({
-                  type: "select-file",
-                  payload: { filepath: f.filepath }
-                });
+                dispatch(selectFile(f.filepath));
               }}
             >
               {f.filepath}
@@ -35,6 +32,18 @@ export function Filer() {
         );
       })}
       <AddFileButton />
+      <div>
+        <button
+          onClick={() => {
+            const confirmed = confirm("Remove all and restart");
+            if (confirmed) {
+              dispatch(reset());
+            }
+          }}
+        >
+          Reset
+        </button>
+      </div>
     </div>
   );
 }
@@ -43,17 +52,7 @@ function DeleteFileButton(props: { filepath: string }) {
   const dispatch = useDispatch();
 
   const onClick = useCallback(() => {
-    // TODO: select other file before delete
-
-    mfs.deleteFile(props.filepath);
-    const json = mfs.toJSON();
-
-    dispatch({
-      type: "update-files",
-      payload: {
-        files: Object.keys(json).map(f => ({ filepath: f }))
-      }
-    });
+    dispatch(deleteFile(props.filepath));
   }, []);
   return <button onClick={onClick}>x</button>;
 }
@@ -66,22 +65,7 @@ function AddFileButton() {
   }, [adding]);
 
   const onDefine = useCallback((filepath: string) => {
-    // debugger;
-    // TODO: Refactor to actions
-    mfs.writeFile(filepath, "");
-    const json = mfs.toJSON();
-    dispatch({
-      type: "update-files",
-      payload: {
-        files: Object.keys(json).map(f => ({ filepath: f }))
-      }
-    });
-
-    dispatch({
-      type: "select-file",
-      payload: { filepath }
-    });
-
+    dispatch(addFile(filepath));
     setAdding(false);
   }, []);
 

@@ -20,12 +20,10 @@ globalThis.MonacoEnvironment = {
 };
 
 monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
-// monaco.languages.typescript.typescriptDefaults.addExtraLib(
-//   "declare class Xxx {  } ",
-//   "/foo.ts"
-// );
+monaco.languages.typescript.typescriptDefaults.addExtraLib(
+  "declare module '*';"
+);
 
-// const fileStates = new Map<string, monaco.editor.IModel>();
 import path from "path";
 
 const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
@@ -33,31 +31,6 @@ const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
   ".ts": "typescript",
   ".json": "json"
 };
-
-let _editor: monaco.editor.IStandaloneCodeEditor | null = null;
-export function buildEditor(el: HTMLElement) {
-  if (_editor) return _editor;
-  _editor = monaco.editor.create(el, {
-    model: null,
-    theme: "vs-dark",
-    scrollbar: {
-      arrowSize: 11
-    },
-    fontSize: 16,
-    // useTabStops: true,
-    wordWrap: "on",
-    wordWrapMinified: true,
-    // wrappingIndent: "indent",
-    minimap: {
-      enabled: false
-    },
-    lineNumbers: "off"
-  });
-  _editor.onDidChangeModel(() => {
-    _editor?.focus();
-  });
-  return _editor;
-}
 
 export function findFile(filepath: string): monaco.editor.IModel | void {
   return monaco.editor.getModels().find(model => {
@@ -107,8 +80,6 @@ export function writeFile(
 ): monaco.editor.ITextModel {
   const extname = path.extname(filepath);
   const lang = extToLang[extname as any];
-  // console.log(filepath, lang);
-  // debugger;
   const newModel = monaco.editor.createModel(
     content || "",
     lang,
@@ -132,7 +103,7 @@ export function toJSON(): SerializedFS {
   return ret;
 }
 
-export function fromJSON(serialized: SerializedFS): void {
+export function restoreFromJSON(serialized: SerializedFS): void {
   Object.entries(serialized).map(([k, v]) => {
     writeFile(k, v);
   });

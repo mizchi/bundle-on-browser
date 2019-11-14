@@ -51,8 +51,6 @@ function parseURL(source: string) {
   try {
     return new URL(source);
   } catch (error) {
-    // Not a valid absolute-URL-with-fragment string
-    // https://url.spec.whatwg.org/#absolute-url-with-fragment-string
     return null;
   }
 }
@@ -70,18 +68,9 @@ function resolveURL(url: URL) {
 }
 
 async function loadURL(url: URL) {
-  // console.log('load', url.href);
-
   switch (url.protocol) {
     case "data:": {
-      // TODO: Resolve relative imports in data URIs?
       return readData(url.href);
-      // case "file:":
-      //   return rewriteRelativeImports(
-      //     url,
-      //     mimeTypes.lookup(url.href),
-      //     readFile(url).toString()
-      //   );
     }
     case "http:":
     case "https:": {

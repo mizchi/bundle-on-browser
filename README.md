@@ -11,7 +11,6 @@
 
 - [x] virtual fs
 - [x] transform ts on compile
-- [ ] UI: validate filename
 - [ ] load types with @types/xxx
 - [ ] load types with .d.ts in repo
 - [ ] Persist current fs
@@ -22,6 +21,7 @@
 - [x] filer: add
 - [x] filer: delete
 - [ ] filer: rename
+- [ ] filer: validate filename
 
 ## LICENSE
 

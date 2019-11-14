@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import MonacoEditor from "./MonacoEditor";
 import { useSelector, useDispatch } from "react-redux";
-import { State } from "../index";
+import { State } from "../store/index";
 import path from "path";
 
 export function Editor() {
