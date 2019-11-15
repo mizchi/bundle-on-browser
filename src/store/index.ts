@@ -1,10 +1,13 @@
 import { Store, AnyAction } from "redux";
-import * as mfs from "../helpers/monacoFileSystem";
 import { throttle } from "lodash-es";
 
 export type State = {
   editing: {
     filepath: string;
+  };
+  dist: null | {
+    code: string;
+    builtAt: number;
   };
   files: Array<{
     filepath: string;
@@ -19,6 +22,13 @@ export type Action =
       };
     }
   | {
+      type: "update-dist";
+      payload: {
+        code: string;
+        builtAt: number;
+      };
+    }
+  | {
       type: "select-file";
       payload: {
         filepath: string;
@@ -27,6 +37,16 @@ export type Action =
 
 export const reducer = (state: State, action: Action) => {
   switch (action.type) {
+    case "update-dist": {
+      return {
+        ...state,
+        dist: {
+          code: action.payload.code,
+          builtAt: action.payload.builtAt
+        }
+      };
+    }
+
     case "select-file": {
       return {
         ...state,

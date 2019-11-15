@@ -8307,6 +8307,11 @@ react-redux@^7.1.1:
     prop-types "^15.7.2"
     react-is "^16.9.0"
 
+react-unite@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/react-unite/-/react-unite-0.1.1.tgz#85ee9cfdfb5c3d4dba860d719302611d1e21b9bb"
+  integrity sha512-cW60GfykurQl0+l278w4IkDk6+10KcOLsAyQm1N1Xxb6aj+xuc2rR/Mqffz0QDXq0DSmexJQjtbSw4GcqMg9YQ==
+
 react@^16.11.0:
   version "16.11.0"
   resolved "https://registry.yarnpkg.com/react/-/react-16.11.0.tgz#d294545fe62299ccee83363599bf904e4a07fdbb"
