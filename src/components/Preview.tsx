@@ -1,11 +1,11 @@
-import React, { useCallback, useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
+import { EditableGrid, Fill, GridData } from "react-unite";
 import { State } from "../store";
-import { EditableGrid, Fill, GridData, GridArea, Grid } from "react-unite";
 
 const initialGrid: GridData = {
-  rows: ["10px", "1fr", "10px"],
-  columns: ["10px", "1fr", "10px"],
+  rows: ["1px", "1fr", "1px"],
+  columns: ["1px", "1fr", "1px"],
   areas: [
     ["0", "1", "2"],
     ["3", "c", "5"],
@@ -20,16 +20,16 @@ export function Preview() {
       {(width, height) => {
         return (
           <EditableGrid
-            // key={`${width}-${height}`}
             width={width}
             height={height}
-            spacerSize={10}
+            spacerSize={16}
             rows={grid.rows}
             columns={grid.columns}
             areas={grid.areas}
+            showVertical={false}
+            showHorizontal={false}
             onChangeGridData={data => {
               setGrid(data);
-              // props.onChangeGrid(data);
             }}
           >
             <div style={{ gridArea: "c", overflow: "hidden" }}>
@@ -52,29 +52,35 @@ export function _Preview() {
   });
   useEffect(() => {
     if (ref.current) {
-      // debugger;
       if (dist?.code && previewedCode !== dist.code) {
-        // console.log("built changed");
         ref.current.src = createIframeBlob(dist.code);
         setPreviewCode(dist.code);
       }
     }
   }, [previewedCode, dist?.code]);
 
-  return (
-    <iframe
-      ref={ref}
-      scrolling="no"
-      frameBorder="no"
-      style={{
-        overflow: "hidden",
-        backgroundColor: "#eee",
-        boxSizing: "border-box",
-        width: "100%",
-        height: "100%"
-      }}
-    />
-  );
+  if (dist?.code) {
+    return (
+      <iframe
+        ref={ref}
+        scrolling="no"
+        frameBorder="no"
+        style={{
+          overflow: "hidden",
+          backgroundColor: "#eee",
+          boxSizing: "border-box",
+          width: "100%",
+          height: "100%"
+        }}
+      />
+    );
+  } else {
+    return (
+      <div>
+        Click <code>Bundle &amp; Run</code> for preview
+      </div>
+    );
+  }
 }
 
 function createIframeBlob(code: string) {

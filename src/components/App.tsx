@@ -1,12 +1,20 @@
-import React from "react";
-import { Preview } from "./Preview";
-import MonacoEditor from "./MonacoEditor";
+import React, { useCallback, useState, Suspense } from "react";
+import { EditableLayout, LayoutData, Windowed } from "react-unite";
 import { Filer } from "./Filer";
+// import MonacoEditor from "./MonacoEditor";
+import { Preview } from "./Preview";
 import { Tools } from "./Tools";
 
-import { LayoutData, Windowed, EditableLayout } from "react-unite";
+const MonacoEditor = React.lazy(() => import("./MonacoEditor"));
 
 export function App() {
+  const [dragging, setDragging] = useState(false);
+  const onDragStart = useCallback(() => {
+    setDragging(true);
+  }, []);
+  const onDragEnd = useCallback(() => {
+    setDragging(false);
+  }, []);
   return (
     <Windowed>
       {(width, height) => (
@@ -14,12 +22,31 @@ export function App() {
           width={width}
           height={height}
           layout={initialLayoutData}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
           renderTab={data => {
             return <span>{data.displayName}</span>;
           }}
           renderWindow={win => {
+            if (dragging) {
+              return (
+                <div
+                  style={{
+                    boxSizing: "border-box",
+                    width: "95%",
+                    height: "95%",
+                    backgroundColor: "#aaa"
+                    // padding: 10
+                  }}
+                />
+              );
+            }
             if (win.id === "#editor") {
-              return <MonacoEditor />;
+              return (
+                <Suspense fallback="Loading...">
+                  <MonacoEditor />
+                </Suspense>
+              );
             }
 
             if (win.id === "#filer") {

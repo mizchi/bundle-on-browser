@@ -1,5 +1,7 @@
+// @ts-ignore
+import logger from "redux-logger";
 import {
-  fileCache,
+  // fileCache,
   loadFilesFromCache,
   saveFilesToCache
 } from "./../storages/fileCache";
@@ -17,7 +19,7 @@ export async function configureStore() {
   const store = createReduxStore<State, Action, {}, {}>(
     reducer as any,
     initialState,
-    applyMiddleware(thunk, promise, saveMiddleware)
+    applyMiddleware(thunk, promise, logger, saveMiddleware)
   );
   return store;
 }

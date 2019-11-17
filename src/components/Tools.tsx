@@ -1,8 +1,9 @@
 import React, { useCallback, useState, useRef } from "react";
-import { compile } from "memory-compiler";
+// import { compile } from "memory-compiler";
 import * as mfs from "../helpers/monacoFileSystem";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../store";
+import { requestBundle } from "../store/actions";
 
 export function Tools() {
   const dispatch = useDispatch();
@@ -12,33 +13,12 @@ export function Tools() {
       dist: s.dist
     };
   });
-
   const [building, setBuilding] = useState<boolean>(false);
   const onClickBundle = useCallback(async () => {
     setBuilding(true);
-    try {
-      const pkgModel = mfs.findFile("/package.json");
-      const tsconfigModel = mfs.findFile("/tsconfig.json");
-      if (pkgModel && tsconfigModel) {
-        const fileMap = mfs.toJSON();
-        const code = await compile({
-          files: fileMap,
-          tsConfig: tsconfigModel.getValue(),
-          minify: true,
-          pkg: JSON.parse(pkgModel.getValue())
-        });
-        dispatch({
-          type: "update-dist",
-          payload: {
-            code,
-            builtAt: Date.now()
-          }
-        });
-      }
-      setBuilding(false);
-    } catch (err) {
-      setBuilding(false);
-    }
+    const a = await requestBundle();
+    dispatch(a);
+    setBuilding(false);
   }, [ref, building]);
   return (
     <div style={{ overflow: "auto", height: "100vh", width: "100%" }}>

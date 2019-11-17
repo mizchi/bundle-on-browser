@@ -65,9 +65,7 @@ export function deleteFile(filepath: string) {
   }
   const m = monaco.editor.getModels().find(m => m.uri.path === filepath);
   if (m) {
-    // m.uri = "/Trashe/" + Math.random();
     m.dispose();
-    // debugger;
     console.log("disposed", filepath);
   } else {
     console.warn(`[mfs:deleteFile] ${filepath} does not exists`);

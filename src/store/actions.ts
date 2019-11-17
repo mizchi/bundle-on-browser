@@ -56,3 +56,28 @@ export async function deleteFile(filepath: string) {
 
   return (dispatch: Function) => dispatch(updateFileTree());
 }
+
+const compileLoading = import("memory-compiler");
+export async function requestBundle() {
+  const pkgModel = mfs.findFile("/package.json");
+  const tsconfigModel = mfs.findFile("/tsconfig.json");
+  if (pkgModel && tsconfigModel) {
+    const fileMap = mfs.toJSON();
+    const { compile } = await compileLoading;
+    const code = await compile({
+      files: fileMap,
+      tsConfig: tsconfigModel.getValue(),
+      minify: true,
+      pkg: JSON.parse(pkgModel.getValue())
+    });
+    return (dispatch: Function) => {
+      dispatch({
+        type: "update-dist",
+        payload: {
+          code,
+          builtAt: Date.now()
+        }
+      });
+    };
+  }
+}

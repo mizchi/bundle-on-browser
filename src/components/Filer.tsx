@@ -86,7 +86,6 @@ function InputFileName(props: {
   const ref = useRef<HTMLInputElement>(null);
   const onKeyDown = useCallback(
     ev => {
-      console.log("xxx", ev.key, ev.target.value);
       if (ev.key === "Escape") {
         props.onCancel();
       }
