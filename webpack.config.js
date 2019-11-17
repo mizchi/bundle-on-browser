@@ -1,5 +1,7 @@
 const path = require("path");
 const HTMLPlugin = require("html-webpack-plugin");
+const {GenerateSW} = require('workbox-webpack-plugin'),
+
 // const MonacoPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
@@ -47,6 +49,7 @@ module.exports = {
     tls: "empty"
   },
   plugins: [
+    GenerateSW(),
     // new MonacoPlugin(),
     new HTMLPlugin({
       template: path.join(__dirname, "src/index.html"),
