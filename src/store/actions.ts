@@ -68,7 +68,8 @@ export async function requestBundle() {
       files: fileMap,
       tsConfig: tsconfigModel.getValue(),
       minify: true,
-      pkg: JSON.parse(pkgModel.getValue())
+      pkg: JSON.parse(pkgModel.getValue()),
+      cache: fileCache
     });
     return (dispatch: Function) => {
       dispatch({

@@ -1,9 +1,10 @@
 import { rollup } from "rollup";
-import cdnResolver from "rollup-plugin-cdn-resolver";
+import cdnResolver, { CDNCache } from "rollup-plugin-cdn-resolver";
 import commonjs from "rollup-plugin-commonjs";
 import terser from "terser";
 import { parseConfigFileTextToJson, transpileModule } from "typescript";
 import memfs from "./plugins/memfs";
+// import {}
 
 export async function compile(options: {
   files: { [filepath: string]: string };
@@ -11,12 +12,12 @@ export async function compile(options: {
   tsConfig: any;
   minify?: boolean;
   typescript?: boolean;
+  cache?: CDNCache;
 }): Promise<string> {
   const parsedTsConfig = parseConfigFileTextToJson(
     "/tsconfig.json",
     options.tsConfig
   );
-
   const bundle = await rollup({
     input: "/index",
     plugins: [
@@ -30,7 +31,7 @@ export async function compile(options: {
           }
         }
       }),
-      cdnResolver({ pkg: options.pkg }) as any,
+      cdnResolver({ pkg: options.pkg, cache: options.cache }) as any,
       commonjs({
         include: /^https:\/\/cdn\.jsdelivr\.net/
       })

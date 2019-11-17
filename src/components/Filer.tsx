@@ -8,9 +8,12 @@ export function Filer() {
     return { files: s.files, currentFileId: s.editing.filepath };
   });
   const dispatch = useDispatch();
+  const localFiles = files.filter(f => !f.filepath.startsWith("/http"));
+  const remoteFiles = files.filter(f => f.filepath.startsWith("/http"));
+
   return (
     <div style={{ paddingLeft: 10 }}>
-      {files.map(f => {
+      {localFiles.map(f => {
         return (
           <div
             style={{
@@ -31,6 +34,34 @@ export function Filer() {
           </div>
         );
       })}
+      <details>
+        <summary
+          style={{ border: "none", outline: "none", userSelect: "none" }}
+        >
+          npm
+        </summary>
+        {remoteFiles.map(f => {
+          return (
+            <div
+              style={{
+                textDecoration:
+                  f.filepath === currentFileId ? "underline" : "none"
+              }}
+              key={f.filepath}
+            >
+              <span
+                onClick={() => {
+                  dispatch(selectFile(f.filepath));
+                }}
+              >
+                {f.filepath}
+              </span>
+              &nbsp;
+              <DeleteFileButton filepath={f.filepath} />
+            </div>
+          );
+        })}
+      </details>
       <AddFileButton />
       <div>
         <button

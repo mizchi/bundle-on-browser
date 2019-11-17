@@ -9,15 +9,18 @@
 
 ## TODO
 
+- [ ] Resolve `preact/hooks` pattern
 - [x] virtual fs
 - [x] transform ts on compile
 - [ ] load types with @types/xxx
-- [ ] load types with .d.ts in repo
+- [ ] load types with `.d.ts` in repo
+- [ ] load types with relative path
 - [ ] Persist current fs
 - [ ] Self bootstrap rollup compiler
 - [x] compile with tsconfig.json
-- [ ] eslint
+- [ ] in memory eslint
 - [ ] test-runner
+- [ ] filer: fold modules
 - [x] filer: add
 - [x] filer: delete
 - [ ] filer: rename

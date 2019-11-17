@@ -51,7 +51,7 @@
     "netlify-cli": "^2.19.3",
     "prettier": "^1.19.1",
     "redux-logger": "^3.0.6",
-    "rollup-plugin-cdn-resolver": "0.0.2-alpha.3",
+    "rollup-plugin-cdn-resolver": "0.1.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-url-resolve": "^0.1.1",
     "rollup-pluginutils": "^2.8.2",
