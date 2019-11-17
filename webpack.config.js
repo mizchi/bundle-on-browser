@@ -1,9 +1,6 @@
 const path = require("path");
 const HTMLPlugin = require("html-webpack-plugin");
-const {GenerateSW} = require('workbox-webpack-plugin'),
-
-// const MonacoPlugin = require("monaco-editor-webpack-plugin");
-
+const { GenerateSW } = require("workbox-webpack-plugin");
 module.exports = {
   entry: {
     main: path.join(__dirname, "src/index"),
@@ -11,8 +8,8 @@ module.exports = {
     "json.worker": "monaco-editor/esm/vs/language/json/json.worker",
     "css.worker": "monaco-editor/esm/vs/language/css/css.worker",
     "html.worker": "monaco-editor/esm/vs/language/html/html.worker",
-    // "ts.worker": "monaco-editor/esm/vs/language/typescript/ts.worker",
-    "ts.worker": path.join(__dirname, "src/monaco-typescript/ts.worker.ts"),
+    "ts.worker": "monaco-editor/esm/vs/language/typescript/ts.worker",
+    // "ts.worker": path.join(__dirname, "src/monaco-typescript/ts.worker.ts"),
     "editor.worker": "monaco-editor/esm/vs/editor/editor.worker.js"
   },
   output: {
@@ -49,8 +46,10 @@ module.exports = {
     tls: "empty"
   },
   plugins: [
-    GenerateSW(),
-    // new MonacoPlugin(),
+    new GenerateSW({
+      clientsClaim: true,
+      skipWaiting: true
+    }),
     new HTMLPlugin({
       template: path.join(__dirname, "src/index.html"),
       inject: false

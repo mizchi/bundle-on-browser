@@ -16,6 +16,11 @@
   </head>
   <body>
     <div class="root"></div>
+    <script type="module">
+      if (location.hostname !== "localhost") {
+        navigator.serviceWorker.register("/service-worker.js");
+      }
+    </script>
     <script src="main.bundle.js"></script>
   </body>
 </html>
