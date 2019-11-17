@@ -13,6 +13,17 @@ import { State, Action, reducer, saveMiddleware } from "./index";
 
 export async function configureStore() {
   // await fileCache.clear();
+  const initialState = await load();
+  const store = createReduxStore<State, Action, {}, {}>(
+    reducer as any,
+    initialState,
+    applyMiddleware(thunk, promise, saveMiddleware)
+  );
+  return store;
+}
+
+async function load() {
+  // await fileCache.clear();
   const files = await loadFilesFromCache();
   if (Object.keys(files).length === 0) {
     console.log("initialize...");
@@ -25,6 +36,7 @@ export async function configureStore() {
   const data = mfs.toJSON();
   const fileNames = Object.keys(data);
   const initialState: State = {
+    dist: null,
     editing: {
       filepath: "/index.ts"
     },
@@ -32,10 +44,5 @@ export async function configureStore() {
       filepath: f
     }))
   };
-  const store = createReduxStore<State, Action, {}, {}>(
-    reducer as any,
-    initialState,
-    applyMiddleware(thunk, promise, saveMiddleware)
-  );
-  return store;
+  return initialState;
 }

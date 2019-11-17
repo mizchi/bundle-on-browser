@@ -88,6 +88,10 @@ export function writeFile(
       path: filepath
     })
   );
+  newModel.updateOptions({
+    tabSize: 2,
+    insertSpaces: true
+  });
   return newModel;
 }
 
