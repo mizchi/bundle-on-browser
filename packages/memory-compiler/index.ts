@@ -1,10 +1,16 @@
+// import { compile } from 'memory-compiler';
 import { rollup } from "rollup";
 import cdnResolver, { CDNCache } from "rollup-plugin-cdn-resolver";
 import commonjs from "rollup-plugin-commonjs";
 import terser from "terser";
 import { parseConfigFileTextToJson, transpileModule } from "typescript";
 import memfs from "./plugins/memfs";
-// import {}
+// @ts-ignore
+// import svelte from "rollup-plugin-svelte";
+import { compile as compileSvelte } from "svelte/compiler";
+
+// @ts-ignore
+import * as compiler from "../../external/vue-next@compiler-dom.esm-browser.prod";
 
 export async function compile(options: {
   files: { [filepath: string]: string };
@@ -23,7 +29,17 @@ export async function compile(options: {
     plugins: [
       memfs(options.files, {
         transform(filename: string, value: string) {
-          if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
+          if (filename.endsWith(".svelte")) {
+            const data = compileSvelte(value);
+            // TODO: Include css
+            return data.js.code;
+          } else if (filename.endsWith(".vue")) {
+            // WIP
+            const { code } = compiler.compile(value, {
+              filename: "template.vue"
+            });
+            return `export default new Function(\`${code}\`)`;
+          } else if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
             const out = transpileModule(value, parsedTsConfig.config);
             return out.outputText;
           } else {
@@ -35,6 +51,7 @@ export async function compile(options: {
       commonjs({
         include: /^https:\/\/cdn\.jsdelivr\.net/
       })
+      // VuePlugin()
     ]
   });
 

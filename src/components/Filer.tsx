@@ -1,7 +1,58 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../store/index";
-import { deleteFile, addFile, selectFile, reset } from "../store/actions";
+import {
+  deleteFile,
+  addFile,
+  selectFile,
+  reset,
+  loadPreset
+} from "../store/actions";
+import { Menu, Tree, ITreeNode, ContextMenu, Button } from "@blueprintjs/core";
+
+function toTree(
+  files: Array<{ filepath: string }>,
+  parent: string = "/"
+): Array<ITreeNode> {
+  files.filter(f => f.filepath.startsWith(parent));
+  return [];
+}
+
+function FileText(props: {
+  text: string;
+  selected: boolean;
+  onClick: Function;
+}) {
+  const dispatch = useDispatch();
+  const ref = useRef(null);
+  const onClickTrash = useCallback(() => {
+    dispatch(deleteFile(props.text));
+  }, [props.text]);
+  const onContextMenu = useCallback((ev: any) => {
+    ev.preventDefault();
+    if (ref.current) {
+      ContextMenu.show(
+        <Menu>
+          <Menu.Item label="Delete" icon="trash" onClick={onClickTrash} />
+        </Menu>,
+        { left: ev.clientX, top: ev.clientY },
+        () => {
+          console.log("xxx");
+        }
+      );
+    }
+  }, []);
+  return (
+    <div
+      ref={ref}
+      onContextMenu={onContextMenu}
+      style={{ color: props.selected ? "red" : "inherit" }}
+      onClick={props.onClick as any}
+    >
+      {props.text}
+    </div>
+  );
+}
 
 export function Filer() {
   const { files, currentFileId } = useSelector((s: State) => {
@@ -12,80 +63,76 @@ export function Filer() {
   const remoteFiles = files.filter(f => f.filepath.startsWith("/http"));
 
   return (
-    <div style={{ paddingLeft: 10 }}>
-      {localFiles.map(f => {
-        return (
-          <div
-            style={{
-              textDecoration:
-                f.filepath === currentFileId ? "underline" : "none"
-            }}
-            key={f.filepath}
-          >
-            <span
+    <Menu>
+      <Tree
+        contents={localFiles.map(f => ({
+          id: f.filepath,
+          label: (
+            <FileText
               onClick={() => {
                 dispatch(selectFile(f.filepath));
               }}
-            >
-              {f.filepath}
-            </span>
-            &nbsp;
-            <DeleteFileButton filepath={f.filepath} />
-          </div>
-        );
-      })}
+              text={f.filepath}
+              selected={currentFileId === f.filepath}
+            />
+          ),
+          icon: "document"
+        }))}
+      />
+      <AddFileButton />
+
+      <hr />
+      <h3>Load presets</h3>
+      <div>
+        {["playground", "react", "preact", "svelte", "vue"].map(presetName => {
+          return (
+            <Button
+              key={presetName}
+              text={presetName}
+              onClick={() => {
+                dispatch(loadPreset(presetName));
+              }}
+            />
+          );
+        })}
+      </div>
+
+      <hr />
       <details>
         <summary
           style={{ border: "none", outline: "none", userSelect: "none" }}
         >
           npm
         </summary>
-        {remoteFiles.map(f => {
-          return (
-            <div
-              style={{
-                textDecoration:
-                  f.filepath === currentFileId ? "underline" : "none"
-              }}
-              key={f.filepath}
-            >
-              <span
+        <Tree
+          contents={remoteFiles.map(f => ({
+            id: f.filepath,
+            label: (
+              <FileText
                 onClick={() => {
                   dispatch(selectFile(f.filepath));
                 }}
-              >
-                {f.filepath}
-              </span>
-              &nbsp;
-              <DeleteFileButton filepath={f.filepath} />
-            </div>
-          );
-        })}
+                text={f.filepath}
+                selected={currentFileId === f.filepath}
+              />
+            ),
+            icon: "document"
+          }))}
+        />
       </details>
-      <AddFileButton />
       <div>
-        <button
+        <Button
           onClick={() => {
             const confirmed = confirm("Remove all and restart");
             if (confirmed) {
               dispatch(reset());
             }
           }}
-        >
-          Reset
-        </button>
+          text="Reset"
+        />
       </div>
-    </div>
+    </Menu>
   );
-}
-
-function DeleteFileButton(props: { filepath: string }) {
-  const dispatch = useDispatch();
-
-  const onClick = useCallback(() => {
-    dispatch(deleteFile(props.filepath));
-  }, []);
-  return <button onClick={onClick}>x</button>;
 }
 
 function AddFileButton() {
@@ -106,7 +153,7 @@ function AddFileButton() {
   if (adding) {
     return <InputFileName onDefine={onDefine} onCancel={onCancel} />;
   } else {
-    return <button onClick={onClickAdd}>Add</button>;
+    return <Button icon="plus" onClick={onClickAdd} text="Add" />;
   }
 }
 
@@ -129,11 +176,17 @@ function InputFileName(props: {
   const onBlur = useCallback(() => {
     props.onCancel();
   }, [props.onCancel]);
-
   useEffect(() => {
     if (ref.current) {
       ref.current.focus();
     }
   }, []);
-  return <input ref={ref} onKeyDown={onKeyDown} onBlur={onBlur} />;
+  return (
+    <input
+      className="bp3-input"
+      ref={ref}
+      onKeyDown={onKeyDown}
+      onBlur={onBlur}
+    />
+  );
 }

@@ -40,7 +40,7 @@ async function load() {
   const initialState: State = {
     dist: null,
     editing: {
-      filepath: "/index.ts"
+      filepath: "/index.tsx"
     },
     files: fileNames.map(f => ({
       filepath: f

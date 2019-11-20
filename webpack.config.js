@@ -17,10 +17,21 @@ module.exports = {
     filename: "[name].bundle.js"
   },
   resolve: {
-    extensions: [".js", ".json", ".ts", ".tsx"]
+    extensions: [".mjs", ".js", ".json", ".ts", ".tsx"]
   },
   module: {
     rules: [
+      {
+        test: /\.(jpg|jpeg|png|woff|woff2|eot|ttf|svg)$/,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              limit: 8192
+            }
+          }
+        ]
+      },
       {
         test: /\.css$/,
         use: ["style-loader", "css-loader"]

@@ -1,5 +1,6 @@
 import { fileCache } from "./../storages/fileCache";
 import * as mfs from "../helpers/monacoFileSystem";
+import * as presets from "./presetStates";
 
 export async function reset() {
   await fileCache.clear();
@@ -9,6 +10,26 @@ export async function reset() {
   return {
     type: "__reset"
   };
+}
+
+export async function loadPreset(presetName: "playground" | "svelte") {
+  await fileCache.clear();
+  await mfs.disposeAll();
+  const files = presets[presetName] || {
+    "/index.tsx": "",
+    "/package.json": '{"dependencies": {}}',
+    "/tsconfig.json": '{"compilerOptions": {}}'
+  };
+  // mfs.restoreFromJSON(files);
+  await Promise.all(
+    Object.entries(files).map(async ([fname, content]) => {
+      await fileCache.set(fname, content);
+      mfs.writeFile(fname, content);
+    })
+  );
+  location.reload();
+  return { type: "__loadPreset" };
+  // return updateFileTree();
 }
 
 export async function writeFile(filepath: string, content: string) {

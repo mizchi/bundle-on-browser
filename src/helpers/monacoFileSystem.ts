@@ -19,12 +19,10 @@ globalThis.MonacoEnvironment = {
   }
 };
 
+// monaco.languages.typescript.
 monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
-monaco.languages.typescript.typescriptDefaults.addExtraLib(
-  "declare module '*';"
-);
-
 import path from "path";
+import { parseConfigFileTextToJson } from "typescript";
 
 const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
   ".js": "javascript",
@@ -90,6 +88,18 @@ export function writeFile(
     tabSize: 2,
     insertSpaces: true
   });
+  if (filepath === "/tsconfig.json" && content) {
+    const conf = parseConfigFileTextToJson(filepath, content);
+    // debugger;
+
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions(
+      conf.config.compilerOptions
+    );
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      "declare module '*';",
+      "decls.d.ts"
+    );
+  }
   return newModel;
 }
 
@@ -109,4 +119,11 @@ export function restoreFromJSON(serialized: SerializedFS): void {
   Object.entries(serialized).map(([k, v]) => {
     writeFile(k, v);
   });
+}
+
+export function disposeAll(): void {
+  const ret: { [k: string]: string } = {};
+  for (const m of monaco.editor.getModels()) {
+    m.dispose();
+  }
 }

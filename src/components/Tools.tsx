@@ -4,6 +4,7 @@ import * as mfs from "../helpers/monacoFileSystem";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../store";
 import { requestBundle } from "../store/actions";
+import { Button } from "@blueprintjs/core";
 
 export function Tools() {
   const dispatch = useDispatch();
@@ -23,9 +24,12 @@ export function Tools() {
   return (
     <div style={{ overflow: "auto", height: "100vh", width: "100%" }}>
       <div>
-        <button onClick={onClickBundle} disabled={building}>
-          Bundle &amp; Run
-        </button>
+        <Button
+          text="Build"
+          icon="build"
+          onClick={onClickBundle}
+          disabled={building}
+        />
         {dist?.code && (
           <div>
             <code>Size: {kb(Array.from(dist.code).length)}kb</code>
