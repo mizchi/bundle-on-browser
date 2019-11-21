@@ -5,6 +5,7 @@ import commonjs from "rollup-plugin-commonjs";
 import terser from "terser";
 import { parseConfigFileTextToJson, transpileModule } from "typescript";
 import memfs from "./plugins/memfs";
+import replace from "rollup-plugin-replace";
 // @ts-ignore
 // import svelte from "rollup-plugin-svelte";
 import { compile as compileSvelte } from "svelte/compiler";
@@ -36,7 +37,7 @@ export async function compile(options: {
           } else if (filename.endsWith(".vue")) {
             // WIP
             const { code } = compiler.compile(value, {
-              filename: "template.vue"
+              filename
             });
             return `export default new Function(\`${code}\`)`;
           } else if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
@@ -46,6 +47,9 @@ export async function compile(options: {
             return value;
           }
         }
+      }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
       }),
       cdnResolver({ pkg: options.pkg, cache: options.cache }) as any,
       commonjs({

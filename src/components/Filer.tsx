@@ -90,7 +90,7 @@ export function Filer() {
               key={presetName}
               text={presetName}
               onClick={() => {
-                dispatch(loadPreset(presetName));
+                dispatch(loadPreset(presetName as any));
               }}
             />
           );

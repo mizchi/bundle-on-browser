@@ -27,11 +27,7 @@ let name = 'world';
 const sampleVue = `<template><div>hello</div></template>`;
 
 export const vue = {
-  "/pre.ts": `// TODO: Strip process.env by preprocess
-  window.process = {env: {NODE_ENV: "production"}};
-  `,
-  "/index.tsx": `import "./pre";
-import Vue from "vue";
+  "/index.tsx": `import Vue from "vue";
 new Vue({
   render(h) {
     return <div>hello</div>
@@ -57,11 +53,7 @@ new Vue({
 };
 
 export const react = {
-  "/pre.ts": `// TODO: Strip process.env by preprocess
-window.process = {env: {NODE_ENV: "production"}};
-`,
-  "/index.tsx": `import "./pre";
-import React from "react";
+  "/index.tsx": `import React from "react";
 import ReactDOM from "react-dom";
 
 function Hello() {
