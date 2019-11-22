@@ -1,7 +1,44 @@
-import { fileCache } from "./../storages/fileCache";
+import { fileCache } from "../storages/fileCache";
 import * as mfs from "../helpers/monacoFileSystem";
 import * as presets from "./presetStates";
 import * as nfs from "../helpers/nativeFileSystem";
+import { remote } from "../api/remote";
+
+export type UpdateFilesAction = {
+  type: "update-files";
+  payload: {
+    files: Array<{ filepath: string }>;
+  };
+};
+
+export type UpdateDistAction = {
+  type: "update-dist";
+  payload: {
+    code: string;
+    builtAt: number;
+  };
+};
+
+export type UpdatePreviewAction = {
+  type: "update-preview";
+  payload: {
+    previewCode: string;
+    builtAt: number;
+  };
+};
+
+export type SelectFileAction = {
+  type: "select-file";
+  payload: {
+    filepath: string;
+  };
+};
+
+export type Action =
+  | UpdateFilesAction
+  | UpdateDistAction
+  | UpdatePreviewAction
+  | SelectFileAction;
 
 export async function reset() {
   await fileCache.clear();
@@ -21,7 +58,6 @@ export async function loadPreset(presetName: "playground" | "svelte") {
     "/package.json": '{"dependencies": {}}',
     "/tsconfig.json": '{"compilerOptions": {}}'
   };
-  // mfs.restoreFromJSON(files);
   await Promise.all(
     Object.entries(files).map(async ([fname, content]) => {
       await fileCache.set(fname, content);
@@ -95,38 +131,30 @@ export async function deleteFile(filepath: string) {
   return (dispatch: Function) => dispatch(updateFileTree());
 }
 
-// const compileLoading = import("memory-compiler");
-const worker = new Worker(
-  /* chunkName: "compiler" */ "../workers/compilerWorker.ts",
-  { type: "module" }
-);
-import { wrap } from "comlink";
-
-const api: any = wrap(worker);
-
-export async function requestBundle() {
-  const pkgModel = mfs.findFile("/package.json");
-  const tsconfigModel = mfs.findFile("/tsconfig.json");
-  if (pkgModel && tsconfigModel) {
-    const fileMap = mfs.toJSON();
-    // const { compile } = await compileLoading;
-    const code = await api.compile({
-      files: fileMap,
-      tsConfig: tsconfigModel.getValue(),
-      minify: true,
-      pkg: JSON.parse(pkgModel.getValue()),
-      cache: fileCache
+export async function requestBundle(entry: string) {
+  const code = await _compileOnMemory(entry, { minify: true });
+  return (dispatch: Function) => {
+    dispatch({
+      type: "update-dist",
+      payload: {
+        code,
+        builtAt: Date.now()
+      }
     });
-    return (dispatch: Function) => {
-      dispatch({
-        type: "update-dist",
-        payload: {
-          code,
-          builtAt: Date.now()
-        }
-      });
-    };
-  }
+  };
+}
+
+export async function requestPreview(entry: string = "/__preview__/index.tsx") {
+  const code = await _compileOnMemory(entry, { minify: false });
+  return (dispatch: Function) => {
+    dispatch({
+      type: "update-preview",
+      payload: {
+        previewCode: code,
+        builtAt: Date.now()
+      }
+    });
+  };
 }
 
 export async function writeToNativeFs() {
@@ -135,4 +163,25 @@ export async function writeToNativeFs() {
   return {
     type: "__write_to_native_fs"
   };
+}
+
+async function _compileOnMemory(
+  entry: string,
+  options: { minify: boolean }
+): Promise<string> {
+  const pkgModel = mfs.findFile("/package.json");
+  const tsconfigModel = mfs.findFile("/tsconfig.json");
+  if (pkgModel && tsconfigModel) {
+    const fileMap = mfs.toJSON();
+    const code = await remote.compile({
+      entry,
+      files: fileMap,
+      tsConfig: tsconfigModel.getValue(),
+      minify: options.minify,
+      pkg: JSON.parse(pkgModel.getValue()),
+      cache: fileCache
+    });
+    return code;
+  }
+  throw new Error("Need package.json and tsconfig.json");
 }

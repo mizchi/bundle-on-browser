@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { EditableGrid, Fill, GridData } from "react-unite";
-import { State } from "../store";
+import { State } from "../reducers";
 
 const initialGrid: GridData = {
   rows: ["1px", "1fr", "1px"],
@@ -45,21 +45,22 @@ export function Preview() {
 export function _Preview() {
   const ref = useRef<HTMLIFrameElement>(null);
   const [previewedCode, setPreviewCode] = useState<string | null>(null);
-  const { dist } = useSelector((s: State) => {
+  const { preview } = useSelector((s: State) => {
     return {
-      dist: s.dist
+      preview: s.preview
     };
   });
   useEffect(() => {
     if (ref.current) {
-      if (dist?.code && previewedCode !== dist.code) {
-        ref.current.src = createIframeBlob(dist.code);
-        setPreviewCode(dist.code);
+      if (preview?.previewCode && previewedCode !== preview.previewCode) {
+        ref.current.src = createIframeBlob(preview.previewCode);
+        setPreviewCode(preview.previewCode);
       }
     }
-  }, [previewedCode, dist?.code]);
+  }, [previewedCode, preview?.previewCode]);
+  console.log("previewCode", preview);
 
-  if (dist?.code) {
+  if (preview?.previewCode) {
     return (
       <iframe
         ref={ref}
@@ -77,14 +78,14 @@ export function _Preview() {
   } else {
     return (
       <div>
-        Click <code>Bundle &amp; Run</code> for preview
+        Click <code>Preview</code>
       </div>
     );
   }
 }
 
 function createIframeBlob(code: string) {
-  const html = `<html><head><style>html,body{margin:0;padding:0}</style></head><body><script>${code}</script></body></html>`;
+  const html = `<html><head><style>html,body{margin:0;padding:0}</style></head><body><script type="module">${code}</script></body></html>`;
   const blob = new Blob([html], { type: "text/html" });
   return URL.createObjectURL(blob);
 }

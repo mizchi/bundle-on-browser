@@ -1,32 +1,34 @@
-// import { compile } from 'memory-compiler';
 import { rollup } from "rollup";
 import cdnResolver, { CDNCache } from "rollup-plugin-cdn-resolver";
 import commonjs from "rollup-plugin-commonjs";
+// @ts-ignore
+import json from "rollup-plugin-json";
 import terser from "terser";
 import { parseConfigFileTextToJson, transpileModule } from "typescript";
 import memfs from "./plugins/memfs";
 import replace from "rollup-plugin-replace";
 // @ts-ignore
-// import svelte from "rollup-plugin-svelte";
 import { compile as compileSvelte } from "svelte/compiler";
-
 // @ts-ignore
 import * as compiler from "../../external/vue-next@compiler-dom.esm-browser.prod";
 
-export async function compile(options: {
+export type CompileOptions = {
+  entry: string;
   files: { [filepath: string]: string };
   pkg: { dependencies: any };
   tsConfig: any;
   minify?: boolean;
   typescript?: boolean;
   cache?: CDNCache;
-}): Promise<string> {
+};
+
+export async function compile(options: CompileOptions): Promise<string> {
   const parsedTsConfig = parseConfigFileTextToJson(
     "/tsconfig.json",
     options.tsConfig
   );
   const bundle = await rollup({
-    input: "/index",
+    input: options.entry,
     plugins: [
       memfs(options.files, {
         transform(filename: string, value: string) {
@@ -48,6 +50,7 @@ export async function compile(options: {
           }
         }
       }),
+      json(),
       replace({
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
@@ -55,7 +58,6 @@ export async function compile(options: {
       commonjs({
         include: /^https:\/\/cdn\.jsdelivr\.net/
       })
-      // VuePlugin()
     ]
   });
 

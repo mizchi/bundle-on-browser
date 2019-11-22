@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { State } from "../store/index";
+import { State } from "../reducers";
 import {
   deleteFile,
   addFile,
   selectFile,
   reset,
   loadPreset
-} from "../store/actions";
+} from "../reducers/actions";
 import { Menu, Tree, ITreeNode, ContextMenu, Button } from "@blueprintjs/core";
 
 function toTree(

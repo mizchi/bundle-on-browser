@@ -1,9 +1,7 @@
 import React, { useCallback, useState, useRef } from "react";
-// import { compile } from "memory-compiler";
-import * as mfs from "../helpers/monacoFileSystem";
 import { useDispatch, useSelector } from "react-redux";
-import { State } from "../store";
-import { requestBundle } from "../store/actions";
+import { State } from "../reducers";
+import { requestBundle, requestPreview } from "../reducers/actions";
 import { Button } from "@blueprintjs/core";
 
 export function Tools() {
@@ -15,17 +13,29 @@ export function Tools() {
     };
   });
   const [building, setBuilding] = useState<boolean>(false);
-  const onClickBundle = useCallback(async () => {
-    setBuilding(true);
-    const a = await requestBundle();
-    dispatch(a);
-    setBuilding(false);
+  const onClickBundle = useCallback(() => {
+    (async () => {
+      setBuilding(true);
+      const a = await requestBundle("/index");
+      dispatch(a);
+      setBuilding(false);
+    })();
   }, [ref, building]);
+
+  const onClickPreview = useCallback(() => {
+    (async () => {
+      setBuilding(true);
+      const a = await requestPreview("/__preview__/index.tsx");
+      dispatch(a);
+      setBuilding(false);
+    })();
+  }, [ref, building]);
+
   return (
     <div style={{ overflow: "auto", height: "100vh", width: "100%" }}>
       <div>
         <Button
-          text="Build"
+          text="Build(/index)"
           icon="build"
           onClick={onClickBundle}
           disabled={building}
@@ -35,6 +45,13 @@ export function Tools() {
             <code>Size: {kb(Array.from(dist.code).length)}kb</code>
           </div>
         )}
+        <hr />
+        <Button
+          text="Preview(/__preview__/index.tsx)"
+          icon="build"
+          onClick={onClickPreview}
+          disabled={building}
+        />
       </div>
     </div>
   );

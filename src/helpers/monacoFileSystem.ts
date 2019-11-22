@@ -24,10 +24,14 @@ monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 import path from "path";
 import { parseConfigFileTextToJson } from "typescript";
 
-const extToLang: { [key: string]: "json" | "javascript" | "typescript" } = {
+const extToLang: {
+  [key: string]: "json" | "javascript" | "typescript" | "html";
+} = {
   ".js": "javascript",
   ".ts": "typescript",
-  ".json": "json"
+  ".json": "json",
+  ".svelte": "html",
+  ".vue": "html"
 };
 
 export function findFile(filepath: string): monaco.editor.IModel | void {
@@ -122,7 +126,6 @@ export function restoreFromJSON(serialized: SerializedFS): void {
 }
 
 export function disposeAll(): void {
-  const ret: { [k: string]: string } = {};
   for (const m of monaco.editor.getModels()) {
     m.dispose();
   }

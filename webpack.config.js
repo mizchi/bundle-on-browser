@@ -5,7 +5,6 @@ const WorkerPlugin = require("worker-plugin");
 module.exports = {
   entry: {
     main: path.join(__dirname, "src/index"),
-    // "ts-worker": path.join(""),
     "json.worker": "monaco-editor/esm/vs/language/json/json.worker",
     "css.worker": "monaco-editor/esm/vs/language/css/css.worker",
     "html.worker": "monaco-editor/esm/vs/language/html/html.worker",
@@ -15,7 +14,8 @@ module.exports = {
   },
   output: {
     path: path.join(__dirname, "dist"),
-    filename: "[name].bundle.js"
+    filename: "[name].bundle.js",
+    chunkFilename: "chunk.[id].[contenthash]js"
   },
   resolve: {
     extensions: [".mjs", ".js", ".json", ".ts", ".tsx"]

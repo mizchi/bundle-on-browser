@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import * as mfs from "../helpers/monacoFileSystem";
 import * as monaco from "monaco-editor";
-import * as actions from "../store/actions";
+import * as actions from "../reducers/actions";
 import { useDispatch, useSelector } from "react-redux";
-import { State } from "../store";
+import { State } from "../reducers";
 import { Fill } from "react-unite";
+import { remote } from "../api/remote";
+import { Diagnostic } from "typescript";
+// import {IMonacoTypeScriptServiceProxy} from 'typescript';
 
 export default function MonacoEditor() {
   return (
@@ -15,6 +18,8 @@ export default function MonacoEditor() {
     </Fill>
   );
 }
+
+const tsWorkerPromise: any = monaco.languages.typescript.getTypeScriptWorker();
 
 function _MonacoEditor(props: {
   width: number | string;
@@ -44,6 +49,30 @@ function _MonacoEditor(props: {
           if (fpath) {
             dispatch(actions.writeFile(fpath, value));
           }
+
+          (async () => {
+            const uri = editor?.getModel()?.uri;
+            if (uri) {
+              const getWorker = await tsWorkerPromise;
+              const proxy = await getWorker(uri);
+              const d: Diagnostic[] = await proxy.getSemanticDiagnostics(
+                uri.toString()
+              );
+              console.log(d.map(d => d));
+            }
+            // const worker = await monaco.languages.typescript.getTypeScriptWorker();
+          })();
+        }
+      });
+      editor.addAction({
+        id: "prettier-format",
+        label: "Prettier Format",
+        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_F],
+        contextMenuGroupId: "navigation",
+        contextMenuOrder: 1.5,
+        run: async ed => {
+          const formatted = await remote.format(ed.getValue());
+          ed.setValue(formatted);
         }
       });
       setCurrentEditor(editor);

@@ -1,9 +1,12 @@
-import { Store, AnyAction } from "redux";
-import { throttle } from "lodash-es";
+import { Action } from "./actions";
 
 export type State = {
   editing: {
     filepath: string;
+  };
+  preview: null | {
+    previewCode: string;
+    builtAt: string;
   };
   dist: null | {
     code: string;
@@ -14,27 +17,6 @@ export type State = {
   }>;
 };
 
-export type Action =
-  | {
-      type: "update-files";
-      payload: {
-        files: Array<{ filepath: string }>;
-      };
-    }
-  | {
-      type: "update-dist";
-      payload: {
-        code: string;
-        builtAt: number;
-      };
-    }
-  | {
-      type: "select-file";
-      payload: {
-        filepath: string;
-      };
-    };
-
 export const reducer = (state: State, action: Action) => {
   switch (action.type) {
     case "update-dist": {
@@ -42,6 +24,15 @@ export const reducer = (state: State, action: Action) => {
         ...state,
         dist: {
           code: action.payload.code,
+          builtAt: action.payload.builtAt
+        }
+      };
+    }
+    case "update-preview": {
+      return {
+        ...state,
+        preview: {
+          previewCode: action.payload.previewCode,
           builtAt: action.payload.builtAt
         }
       };
@@ -65,15 +56,4 @@ export const reducer = (state: State, action: Action) => {
       return state;
     }
   }
-};
-
-const save = throttle(() => {
-  console.log("save!", Date.now());
-}, 3000);
-
-export const saveMiddleware: any = (store: Store<State>) => (next: any) => (
-  action: AnyAction
-) => {
-  save();
-  next(action);
 };
