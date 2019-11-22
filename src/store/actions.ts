@@ -1,6 +1,7 @@
 import { fileCache } from "./../storages/fileCache";
 import * as mfs from "../helpers/monacoFileSystem";
 import * as presets from "./presetStates";
+import * as nfs from "../helpers/nativeFileSystem";
 
 export async function reset() {
   await fileCache.clear();
@@ -16,7 +17,7 @@ export async function loadPreset(presetName: "playground" | "svelte") {
   await fileCache.clear();
   await mfs.disposeAll();
   const files = presets[presetName] || {
-    "/index.tsx": "",
+    "/index.tsx": "// coding!",
     "/package.json": '{"dependencies": {}}',
     "/tsconfig.json": '{"compilerOptions": {}}'
   };
@@ -27,9 +28,25 @@ export async function loadPreset(presetName: "playground" | "svelte") {
       mfs.writeFile(fname, content);
     })
   );
+  // TODO: Uupdate correctrly
   location.reload();
   return { type: "__loadPreset" };
-  // return updateFileTree();
+}
+
+export async function loadFromNativeFS() {
+  await fileCache.clear();
+  await mfs.disposeAll();
+  const files = await nfs.loadFromNativeFS();
+  await Promise.all(
+    Object.entries(files).map(async ([fname, content]) => {
+      await fileCache.set(fname, content);
+      mfs.writeFile(fname, content);
+    })
+  );
+  location.reload();
+  return {
+    type: "__load_from_native_fs"
+  };
 }
 
 export async function writeFile(filepath: string, content: string) {
@@ -78,14 +95,22 @@ export async function deleteFile(filepath: string) {
   return (dispatch: Function) => dispatch(updateFileTree());
 }
 
-const compileLoading = import("memory-compiler");
+// const compileLoading = import("memory-compiler");
+const worker = new Worker(
+  /* chunkName: "compiler" */ "../workers/compilerWorker.ts",
+  { type: "module" }
+);
+import { wrap } from "comlink";
+
+const api: any = wrap(worker);
+
 export async function requestBundle() {
   const pkgModel = mfs.findFile("/package.json");
   const tsconfigModel = mfs.findFile("/tsconfig.json");
   if (pkgModel && tsconfigModel) {
     const fileMap = mfs.toJSON();
-    const { compile } = await compileLoading;
-    const code = await compile({
+    // const { compile } = await compileLoading;
+    const code = await api.compile({
       files: fileMap,
       tsConfig: tsconfigModel.getValue(),
       minify: true,
@@ -102,4 +127,12 @@ export async function requestBundle() {
       });
     };
   }
+}
+
+export async function writeToNativeFs() {
+  const fileMap = mfs.toJSON();
+  await nfs.writeToNativeFS(fileMap);
+  return {
+    type: "__write_to_native_fs"
+  };
 }

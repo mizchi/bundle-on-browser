@@ -4,6 +4,7 @@ import { Filer } from "./Filer";
 // import MonacoEditor from "./MonacoEditor";
 import { Preview } from "./Preview";
 import { Tools } from "./Tools";
+import { KeyBindings } from "./Keybindings";
 
 const MonacoEditor = React.lazy(() => import("./MonacoEditor"));
 
@@ -16,66 +17,69 @@ export function App() {
     setDragging(false);
   }, []);
   return (
-    <Windowed>
-      {(width, height) => (
-        <EditableLayout
-          width={width}
-          height={height}
-          layout={initialLayoutData}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          renderTab={data => {
-            return <span>{data.displayName}</span>;
-          }}
-          renderWindow={win => {
-            if (dragging) {
-              return (
-                <div
-                  style={{
-                    boxSizing: "border-box",
-                    width: "95%",
-                    height: "95%",
-                    backgroundColor: "#aaa"
-                    // padding: 10
-                  }}
-                />
-              );
-            }
-            if (win.id === "#editor") {
-              return (
-                <Suspense fallback="Loading...">
-                  <MonacoEditor />
-                </Suspense>
-              );
-            }
+    <>
+      <KeyBindings />
+      <Windowed>
+        {(width, height) => (
+          <EditableLayout
+            width={width}
+            height={height}
+            layout={initialLayoutData}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            renderTab={data => {
+              return <span>{data.displayName}</span>;
+            }}
+            renderWindow={win => {
+              if (dragging) {
+                return (
+                  <div
+                    style={{
+                      boxSizing: "border-box",
+                      width: "95%",
+                      height: "95%",
+                      backgroundColor: "#aaa"
+                      // padding: 10
+                    }}
+                  />
+                );
+              }
+              if (win.id === "#editor") {
+                return (
+                  <Suspense fallback="Loading...">
+                    <MonacoEditor />
+                  </Suspense>
+                );
+              }
 
-            if (win.id === "#filer") {
+              if (win.id === "#filer") {
+                return (
+                  <div style={{ width: "100%", height: "100%" }}>
+                    <Filer />
+                  </div>
+                );
+              }
+              if (win.id === "#tools") {
+                return (
+                  <div style={{ width: "100%", height: "100%" }}>
+                    <Tools />
+                  </div>
+                );
+              }
+
+              if (win.id === "#preview") {
+                return <Preview />;
+              }
               return (
-                <div style={{ width: "100%", height: "100%" }}>
-                  <Filer />
+                <div>
+                  {win.id}: {win.displayName}
                 </div>
               );
-            }
-            if (win.id === "#tools") {
-              return (
-                <div style={{ width: "100%", height: "100%" }}>
-                  <Tools />
-                </div>
-              );
-            }
-
-            if (win.id === "#preview") {
-              return <Preview />;
-            }
-            return (
-              <div>
-                {win.id}: {win.displayName}
-              </div>
-            );
-          }}
-        />
-      )}
-    </Windowed>
+            }}
+          />
+        )}
+      </Windowed>
+    </>
   );
 }
 
