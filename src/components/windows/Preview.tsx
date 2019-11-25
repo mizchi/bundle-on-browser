@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { EditableGrid, Fill, GridData } from "react-unite";
-import { State } from "../reducers";
+import { State } from "../../reducers";
 
 const initialGrid: GridData = {
   rows: ["1px", "1fr", "1px"],

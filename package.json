@@ -36,7 +36,8 @@
     "ses": "^0.6.4",
     "terser": "^4.3.9",
     "unfetch": "^4.1.0",
-    "url-loader": "^2.2.0"
+    "url-loader": "^2.2.0",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@types/async": "^3.0.3",

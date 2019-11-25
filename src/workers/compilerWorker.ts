@@ -1,4 +1,4 @@
-import { fileCache } from "./../storages/fileCache";
+import { npmCache } from "./../storages/npmCache";
 import { expose } from "comlink";
 import * as compiler from "memory-compiler";
 // @ts-ignore
@@ -14,7 +14,7 @@ async function compile(args: {
   minify?: boolean;
   typescript?: boolean;
 }) {
-  return compiler.compile({ ...args, cache: fileCache });
+  return compiler.compile({ ...args, cache: npmCache });
 }
 
 async function format(code: string) {

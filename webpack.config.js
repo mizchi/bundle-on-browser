@@ -15,7 +15,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, "dist"),
     filename: "[name].bundle.js",
-    chunkFilename: "chunk.[id].[contenthash]js"
+    chunkFilename: "chunk.[id].[contenthash].js",
+    globalObject: "self"
   },
   resolve: {
     extensions: [".mjs", ".js", ".json", ".ts", ".tsx"]
@@ -66,6 +67,8 @@ module.exports = {
       template: path.join(__dirname, "src/index.html"),
       inject: false
     }),
-    new WorkerPlugin()
+    new WorkerPlugin({
+      // globalObject: "self"
+    })
   ]
 };

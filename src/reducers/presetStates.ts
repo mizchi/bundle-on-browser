@@ -49,10 +49,14 @@ new Vue({
   }
 }).$mount(document.body)
 `,
-  "/package.json": JSON.stringify({
-    private: true,
-    dependencies: { vue: "2.*" }
-  }),
+  "/package.json": JSON.stringify(
+    {
+      private: true,
+      dependencies: { vue: "2.*" }
+    },
+    null,
+    2
+  ),
   "/tsconfig.json": JSON.stringify(
     {
       compilerOptions: {
@@ -113,20 +117,29 @@ function Counter() {
   }, [state]);
   return <button onClick={onClick}>{state}++</button>
 }
-export default (options) => {
+
+export default (options: any) => {
   render(<Counter />, document.body);
 }
 `,
-  "/package.json": JSON.stringify({
-    private: true,
-    dependencies: { preact: "10.*" }
-  }),
+  "/package.json": JSON.stringify(
+    {
+      private: true,
+      dependencies: { preact: "10.*" }
+    },
+    null,
+    2
+  ),
   "/tsconfig.json": JSON.stringify(initialTsConfig, null, 2)
 };
 
 export const svelte = {
   ...previewAssets,
-  "/index.tsx": `import App from "./app.svelte";\nnew App({target: document.body})`,
+  "/index.tsx": `import App from "./app.svelte";
+export default (options: any) => {
+  new App({ target: document.body });
+};
+`,
   "/app.svelte": sampleSvelte,
   "/package.json": JSON.stringify({
     private: true,

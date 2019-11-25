@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import * as mfs from "../helpers/monacoFileSystem";
+import * as mfs from "../../helpers/monacoFileSystem";
 import * as monaco from "monaco-editor";
-import * as actions from "../reducers/actions";
+import * as actions from "../../reducers/actions";
 import { useDispatch, useSelector } from "react-redux";
-import { State } from "../reducers";
+import { State } from "../../reducers";
 import { Fill } from "react-unite";
-import { remote } from "../api/remote";
+import { remote } from "../../api/remote";
 import { Diagnostic } from "typescript";
 // import {IMonacoTypeScriptServiceProxy} from 'typescript';
 
@@ -42,6 +42,9 @@ function _MonacoEditor(props: {
   useEffect(() => {
     if (editorRef.current) {
       const editor = monaco.editor.create(editorRef.current, options);
+      editor.onDidChangeModel(() => {
+        editor.focus();
+      });
       editor.onDidChangeModelContent(_changes => {
         if (editor) {
           const value = editor.getValue();
@@ -50,18 +53,18 @@ function _MonacoEditor(props: {
             dispatch(actions.writeFile(fpath, value));
           }
 
-          (async () => {
-            const uri = editor?.getModel()?.uri;
-            if (uri) {
-              const getWorker = await tsWorkerPromise;
-              const proxy = await getWorker(uri);
-              const d: Diagnostic[] = await proxy.getSemanticDiagnostics(
-                uri.toString()
-              );
-              console.log(d.map(d => d));
-            }
-            // const worker = await monaco.languages.typescript.getTypeScriptWorker();
-          })();
+          // (async () => {
+          //   const uri = editor?.getModel()?.uri;
+          //   if (uri) {
+          //     const getWorker = await tsWorkerPromise;
+          //     const proxy = await getWorker(uri);
+          //     const d: Diagnostic[] = await proxy.getSemanticDiagnostics(
+          //       uri.toString()
+          //     );
+          //     console.log(d.map(d => d));
+          //   }
+          //   // const worker = await monaco.languages.typescript.getTypeScriptWorker();
+          // })();
         }
       });
       editor.addAction({

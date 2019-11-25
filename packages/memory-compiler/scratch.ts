@@ -16,7 +16,14 @@ console.log(el, flatten);
 `;
 
 async function main() {
-  const out = await compile(code, { pkg });
+  const out = await compile({
+    pkg,
+    entry: "/index",
+    files: {
+      "/index.js": ""
+    },
+    tsConfig: {}
+  });
   console.log(out);
 }
 

@@ -2,6 +2,7 @@ import { Action } from "./actions";
 
 export type State = {
   editing: {
+    workspaceId: string;
     filepath: string;
   };
   preview: null | {
@@ -14,6 +15,9 @@ export type State = {
   };
   files: Array<{
     filepath: string;
+  }>;
+  workspaces: Array<{
+    workspaceId: string;
   }>;
 };
 
