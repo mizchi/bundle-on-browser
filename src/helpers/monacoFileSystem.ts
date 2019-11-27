@@ -29,6 +29,7 @@ const extToLang: {
 } = {
   ".js": "javascript",
   ".ts": "typescript",
+  ".tsx": "typescript",
   ".json": "json",
   ".svelte": "html",
   ".vue": "html"
@@ -80,6 +81,10 @@ export function writeFile(
 ): monaco.editor.ITextModel {
   const extname = path.extname(filepath);
   const lang = extToLang[extname as any];
+  console.log(extname, lang);
+  if (lang === undefined) {
+    debugger;
+  }
   const newModel = monaco.editor.createModel(
     content || "",
     lang,

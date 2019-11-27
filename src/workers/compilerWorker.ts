@@ -1,6 +1,8 @@
 import { npmCache } from "./../storages/npmCache";
 import { expose } from "comlink";
-import * as compiler from "memory-compiler";
+// import * as compiler from "memory-compiler";
+// @ts-ignore
+import * as compiler from "@mizchi/web-compiler";
 // @ts-ignore
 import prettier from "prettier/standalone";
 // @ts-ignore

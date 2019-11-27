@@ -51,14 +51,15 @@ async function findWorkspaceId(): Promise<string> {
 
 async function loadInitialState(workspaceId: string) {
   const files = await loadFilesFromCache();
-  if (Object.keys(files).length === 0) {
-    console.log("initialize...");
-    const initialFiles = createFirstFiles();
-    await saveFilesToCache(initialFiles);
-    await mfs.restoreFromJSON(initialFiles);
-  } else {
-    await mfs.restoreFromJSON(files);
-  }
+  await mfs.restoreFromJSON(files);
+  // if (Object.keys(files).length === 0) {
+  //   console.log("initialize...");
+  //   const initialFiles = createFirstFiles();
+  //   await saveFilesToCache(initialFiles);
+  //   await mfs.restoreFromJSON(initialFiles);
+  // } else {
+  //   await mfs.restoreFromJSON(files);
+  // }
 
   const data = mfs.toJSON();
   const fileNames = Object.keys(data);

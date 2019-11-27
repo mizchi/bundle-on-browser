@@ -1,9 +1,11 @@
-import { StorageArea } from "kv-storage-polyfill";
+import { StorageArea, storage } from "kv-storage-polyfill";
 
 const FS_STORAGE_VERSION = 1;
 const FS_STORAGE_KEY = `fs:${FS_STORAGE_VERSION}`;
 
 export const fileCache = new StorageArea<string, string>(FS_STORAGE_KEY);
+
+export function getStorage() {}
 
 export async function loadFilesFromCache(): Promise<{ [key: string]: string }> {
   const ret: { [key: string]: string } = {};
