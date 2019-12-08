@@ -6,7 +6,7 @@ import { deleteFile, addFile, selectFile } from "../../reducers/actions";
 import { Menu, Tree, ITreeNode, ContextMenu, Button } from "@blueprintjs/core";
 import groupBy from "lodash-es/groupBy";
 
-export function Filer() {
+export default function Filer() {
   const { files, currentFileId } = useSelector((s: State) => {
     return { files: s.files, currentFileId: s.editing.filepath };
   });
@@ -16,27 +16,29 @@ export function Filer() {
 
   const contents = toTree(files, openIds, currentFileId);
   return (
-    <Menu>
-      <Tree
-        contents={contents}
-        onNodeClick={(p, ev) => {
-          const id = p.id as any;
-          const found = files.find(f => f.filepath === id);
-          if (found) {
-            dispatch(selectFile(id));
-          }
-        }}
-        onNodeCollapse={(p, ev) => {
-          console.log(p);
-          setOpenIds(openIds.filter(id => id !== p.id));
-        }}
-        onNodeExpand={(p, ev) => {
-          console.log(p);
-          setOpenIds([...openIds, p.id as any]);
-        }}
-      />
-      <AddFileButton />
-    </Menu>
+    <div style={{ width: "100%", height: "100%" }}>
+      <Menu>
+        <Tree
+          contents={contents}
+          onNodeClick={(p, ev) => {
+            const id = p.id as any;
+            const found = files.find(f => f.filepath === id);
+            if (found) {
+              dispatch(selectFile(id));
+            }
+          }}
+          onNodeCollapse={(p, ev) => {
+            console.log(p);
+            setOpenIds(openIds.filter(id => id !== p.id));
+          }}
+          onNodeExpand={(p, ev) => {
+            console.log(p);
+            setOpenIds([...openIds, p.id as any]);
+          }}
+        />
+        <AddFileButton />
+      </Menu>
+    </div>
   );
 }
 

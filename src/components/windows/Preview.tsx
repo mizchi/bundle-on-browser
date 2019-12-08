@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { EditableGrid, Fill, GridData } from "react-unite";
+import { EditableGrid, GridData, useElementSize } from "react-unite";
 import { State } from "../../reducers";
 
 const initialGrid: GridData = {
@@ -13,32 +13,32 @@ const initialGrid: GridData = {
   ]
 };
 
-export function Preview() {
+export default function Preview() {
+  const ref = useRef(null);
+  const size = useElementSize(ref);
   const [grid, setGrid] = useState(initialGrid);
   return (
-    <Fill>
-      {(width, height) => {
-        return (
-          <EditableGrid
-            width={width}
-            height={height}
-            spacerSize={16}
-            rows={grid.rows}
-            columns={grid.columns}
-            areas={grid.areas}
-            showVertical={false}
-            showHorizontal={false}
-            onChangeGridData={data => {
-              setGrid(data);
-            }}
-          >
-            <div style={{ gridArea: "c", overflow: "hidden" }}>
-              <_Preview />
-            </div>
-          </EditableGrid>
-        );
-      }}
-    </Fill>
+    <div ref={ref} style={{ width: "100%", height: "100%" }}>
+      {size && (
+        <EditableGrid
+          width={size.width}
+          height={size.height}
+          spacerSize={16}
+          rows={grid.rows}
+          columns={grid.columns}
+          areas={grid.areas}
+          showVertical={false}
+          showHorizontal={false}
+          onChangeGridData={data => {
+            setGrid(data);
+          }}
+        >
+          <div style={{ gridArea: "c", overflow: "hidden" }}>
+            <_Preview />
+          </div>
+        </EditableGrid>
+      )}
+    </div>
   );
 }
 

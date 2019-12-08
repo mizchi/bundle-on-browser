@@ -4,7 +4,7 @@ import { State } from "../../reducers";
 import { requestBundle, requestPreview } from "../../reducers/actions";
 import { Button } from "@blueprintjs/core";
 
-export function Tools() {
+export default function Tools() {
   const dispatch = useDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const { dist } = useSelector((s: State) => {
@@ -13,6 +13,7 @@ export function Tools() {
     };
   });
   const [building, setBuilding] = useState<boolean>(false);
+
   const onClickBundle = useCallback(() => {
     (async () => {
       setBuilding(true);
@@ -38,6 +39,27 @@ export function Tools() {
   }, [ref, building]);
 
   const hash = dist?.code ? toHash(dist.code) : null;
+  const onClickUpload = useCallback(() => {
+    (async () => {
+      setBuilding(true);
+      try {
+        console.log("uploading code", dist?.code);
+        await fetch(`http://localhost:6001/code/${hash}`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code: dist?.code })
+        });
+        alert("uploaded to " + hash);
+      } catch (err) {
+        throw new Error("err");
+      } finally {
+        setBuilding(false);
+      }
+    })();
+  }, [dist?.code, hash]);
 
   return (
     <div style={{ overflow: "auto", height: "100%", width: "100%" }}>
@@ -61,22 +83,25 @@ export function Tools() {
           </div>
         )}
         {hash && (
-          <div>
-            <a
-              download={`${hash}.js`}
-              onClick={ev => {
-                if (hash && dist?.code) {
-                  const url = URL.createObjectURL(
-                    new Blob([dist?.code], { type: "text/javascript" })
-                  );
-                  // @ts-ignore
-                  ev.target.href = url;
-                }
-              }}
-            >
-              {hash}.js
-            </a>
-          </div>
+          <>
+            <div>
+              <a
+                download={`${hash}.js`}
+                onClick={ev => {
+                  if (hash && dist?.code) {
+                    const url = URL.createObjectURL(
+                      new Blob([dist?.code], { type: "text/javascript" })
+                    );
+                    // @ts-ignore
+                    ev.target.href = url;
+                  }
+                }}
+              >
+                {hash}.js
+              </a>
+            </div>
+            <Button onClick={onClickUpload} text="Upload" />
+          </>
         )}
       </div>
     </div>

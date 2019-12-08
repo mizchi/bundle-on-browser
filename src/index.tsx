@@ -10,6 +10,7 @@ import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { App } from "./components/App";
 import { configureStore } from "./store/configureStore";
+import { KeyBindings } from "./components/Keybindings";
 
 async function main() {
   const root = document.querySelector(".root") as HTMLDivElement;
@@ -17,7 +18,10 @@ async function main() {
 
   ReactDOM.render(
     <Provider store={store}>
-      <App />
+      <>
+        <KeyBindings />
+        <App />
+      </>
     </Provider>,
     root
   );

@@ -5,7 +5,7 @@ import { loadPreset, reset } from "../../reducers/actions";
 
 const presetNames = ["playground", "react", "preact", "svelte", "vue"];
 
-export function Workspace() {
+export default function Workspace() {
   const dispatch = useDispatch();
   const [preset, setPreset] = useState<string>(presetNames[0]);
   return (

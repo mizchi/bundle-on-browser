@@ -4,22 +4,20 @@ import * as monaco from "monaco-editor";
 import * as actions from "../../reducers/actions";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../../reducers";
-import { Fill } from "react-unite";
+import { useElementSize } from "react-unite";
 import { remote } from "../../api/remote";
 import { Diagnostic } from "typescript";
 // import {IMonacoTypeScriptServiceProxy} from 'typescript';
 
 export default function MonacoEditor() {
+  const ref = useRef(null);
+  const size = useElementSize(ref);
   return (
-    <Fill>
-      {(width, height) => {
-        return <_MonacoEditor width={width} height={height} />;
-      }}
-    </Fill>
+    <div ref={ref} style={{ width: "100%", height: "100%" }}>
+      {size && <_MonacoEditor width={size.width} height={size.height} />}
+    </div>
   );
 }
-
-const tsWorkerPromise: any = monaco.languages.typescript.getTypeScriptWorker();
 
 function _MonacoEditor(props: {
   width: number | string;
